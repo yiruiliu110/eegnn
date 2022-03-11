@@ -9,14 +9,14 @@ log_prob_fn = torch.distributions.normal.Normal(0., 1.).log_prob
 
 sampling = torch.tensor([1.0])
 
-MH = MetropolisHastings()
+MH = MetropolisHastings(0.05)
 
 result = []
-for i in range(10000):
+for i in range(20000):
     sampling = MH.one_step(sampling, log_prob_fn)
     result += [sampling]
 
-sns.displot(torch.tensor(result[-500:-1]))
+sns.displot(torch.tensor(result[-5000:-1]))
 plt.show()
 
 
@@ -25,16 +25,18 @@ plt.show()
 ########
 log_prob_fn = torch.distributions.normal.Normal(torch.tensor([0., 1.0]), 1.).log_prob
 
-sampling = torch.cat([1.0, 0.0])
+sampling = torch.tensor([1.0, 0.0])
 
 MH = MetropolisHastings()
 
 result = []
-for i in range(10000):
+for i in range(20000):
     sampling = MH.one_step(sampling, log_prob_fn)
     result += [sampling]
 
-result = torch.cat([torch.tensor(item) for item in result[-500:-1]], dim=0)
+result = torch.cat([torch.unsqueeze(item, 1) for item in result[-5000:-1]], dim=1)
 
-sns.displot(result[:, 1])
+sns.displot(result[0])
+plt.show()
+sns.displot(result[1])
 plt.show()
