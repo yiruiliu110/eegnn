@@ -29,15 +29,30 @@ class MetropolisHastings:
 
     def one_step(self, state, log_prob_fn):
         with torch.no_grad():
-            if self.last_step_log_prob is None:
-                self.last_step_log_prob = log_prob_fn(state)
-            if self.step_size is None:
-                self.step_size = torch.ones(state.size()) * self.initial_step_size
+            self.build_initials(state, log_prob_fn)
             proposed_state = state + torch.normal(0.0, 1.0, state.size()) * self.step_size
 
             propose_log_prob = log_prob_fn(proposed_state)
 
             log_accept_ratio = propose_log_prob - self.last_step_log_prob
+
+            new_state, accepted = self.mh_accept(proposed_state, state, log_accept_ratio)
+
+            self.last_step_log_prob = torch.where(accepted, propose_log_prob, self.last_step_log_prob)
+
+            self.number_steps += 1
+
+            return new_state
+
+    def build_initials(self, state, log_prob_fn):
+        with torch.no_grad():
+            if self.last_step_log_prob is None:
+                self.last_step_log_prob = log_prob_fn(state)
+            if self.step_size is None:
+                self.step_size = self.initial_step_size
+
+    def mh_accept(self, proposed_state, state, log_accept_ratio):
+        with torch.no_grad():
 
             accepted = is_accepted(log_accept_ratio)
 
@@ -45,11 +60,8 @@ class MetropolisHastings:
 
             new_state = torch.where(accepted, proposed_state, state)
 
-            self.last_step_log_prob = torch.where(accepted, propose_log_prob, self.last_step_log_prob)
+            return new_state, accepted
 
-            self.number_steps += 1
-
-            return new_state
 
 
 

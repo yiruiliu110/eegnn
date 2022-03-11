@@ -1,5 +1,5 @@
 """
-test mh using a normal dist and multivariate normal dist, and two independ normal
+test mh using a normal dist and multivariate normal dist, and two independent normal
 """
 import torch
 import seaborn as sns
