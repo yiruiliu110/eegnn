@@ -1,12 +1,14 @@
 """
 This file contain the class for Bayesian nonparametric graph model
 """
+import functools
 
 import torch
 from torch import triu
 from torch.distributions import Gamma, Dirichlet
 
 from estimation.compute_m import compute_m
+from estimation.mh import MetropolisHastings
 from estimation.sample_c import compute_c
 from estimation.sample_z import compute_z
 
@@ -62,6 +64,9 @@ class BNPGraphModel(object):
             'tau': tau,
         }
 
+        self.w_0_mh = MetropolisHastings()
+        self.w_k_mh = MetropolisHastings()
+
     def one_step(self):
         self.update_w_0_proportion()
         self.update_w_proportion()
@@ -89,5 +94,24 @@ class BNPGraphModel(object):
 
     def update_z(self):
         self.state['z'] = compute_z(self.state['w'], self.state['c'], self.graph_sparse)
+
+    def update_w_0_total(self):
+        log_prob_fn = functools.partial(self.log_prob_wrt_w_0, w_k=self.state['w_k'],
+                                        u=self.u)
+        self.w_0_mh.one_step(state=self.state['w_0'], log_prob_fn=log_prob_fn)
+
+    @staticmethod
+    def log_prob_wrt_w_0(w_0, w_k, u):
+            return torch.log(u(w_0)) + w_0 * torch.sum(torch.log(w_k)) - torch.tensor(w_k.size()) * torch.lgamma(w_0)
+
+    @staticmethod
+    def log_prob_wrt_w_k(w_k, n_k, w_0, tau, pi_k):
+            return (2.0 * n_k + w_0 - 1.0) * torch.log(w_k) - tau * w_k - w_k * w_k * pi_k
+
+    def update_w_total(self):
+        log_prob_fn = functools.partial(self.log_prob_wrt_w_k, n_k=torch.sum(self.state['m'], dim=1) , w_0=self.state['w_0'],
+                                        tau=self.hyper_paras['tau'], pi_k=self.state['pi'])
+        self.w_k_mh.one_step(state=self.state['w_k'], log_prob_fn=log_prob_fn)
+
 
 
