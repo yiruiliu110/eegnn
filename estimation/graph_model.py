@@ -4,12 +4,15 @@ This file contain the class for Bayesian nonparametric graph model
 import functools
 
 import torch
-from torch import triu
 from torch.distributions import Gamma, Dirichlet
 
+from estimation.build_initials import build_initials
 from estimation.compute_m import compute_m
+from estimation.hmc import HamiltonMonteCarlo
 from estimation.mh import MetropolisHastings
 from estimation.sample_c import compute_c
+from estimation.sample_pi import sample_pi
+from estimation.sample_w_proportion import sample_w_proportion
 from estimation.sample_z import compute_z
 
 
@@ -24,7 +27,7 @@ class BNPGraphModel(object):
                  max_K: int = 100):
 
         # B convention, we just need to infer upper triangle's n_ij
-        dense_graph = triu(graph.to_dense())
+        dense_graph = torch.triu(graph.to_dense())
         self.graph_sparse = dense_graph.to_sparse(2)
 
         self.node_number = dense_graph.shape[0]
@@ -39,22 +42,7 @@ class BNPGraphModel(object):
         self.proposal_r_idx, self.proposal_c_idx = torch.split(graph._indices(), [1, 1])  # For Step 3, pre-define indices
 
         # Step 0: Initialization
-        indices = self.graph_sparse._indices()
-        size = self.graph_sparse.size()
-        self.state = {
-            'pi': torch.cat([torch.ones(initial_K) / initial_K, torch.zeros(max_K - initial_K)]),
-            'w_0':  Gamma(concentration=1., rate=1.).sample([self.node_number]),
-            'w': Gamma(concentration=1., rate=1.).sample([max_K, self.node_number]),
-            #'w_star': Gamma(concentration=1., rate=1.).sample([max_K]),
-            'z': torch.sparse_coo_tensor(indices=indices,
-                                         values=torch.randint(low=1, high=5, size=(self.edge_number,)),
-                                         size=size),
-            'c': torch.sparse_coo_tensor(indices=indices,
-                                         values=torch.randint(low=0, high=initial_K, size=(self.edge_number,)),
-                                         size=size),
-        }
-
-        self.state['m'] = compute_m(self.state['z'], self.state['c'], max_K)
+        self.state = build_initials(initial_K, max_K, self.graph_sparse, self.node_number, self.edge_number)
 
         # hyper parameters
         self.hyper_paras = {
@@ -64,8 +52,9 @@ class BNPGraphModel(object):
             'tau': tau,
         }
 
-        self.w_0_mh = MetropolisHastings()
-        self.w_k_mh = MetropolisHastings()
+        self.w_0_mh_sampler = MetropolisHastings()
+        self.w_k_mh_sampler = MetropolisHastings()
+        self.w_0_proportion_sampler = HamiltonMonteCarlo()
 
     def one_step(self):
         self.update_w_0_proportion()
@@ -77,20 +66,18 @@ class BNPGraphModel(object):
         self.update_w_total()
 
     def update_w_proportion(self):
-        self.state['m'] = compute_m(self.state['z'], self.state['c'], self.max_K)
-        concentration = self.state['m'] + torch.unsqueeze(self.state['w_0'], dim=1)
-        w_tmp = Gamma(concentration=concentration, rate=1.).sample()  # max_K X number_nodes
-
-        self.state['w'] = w_tmp / torch.sum(w_tmp, dim=1, keepdim=True) * torch.sum(self.state['w'], dim=1, keepdim=True)
+        w_bar = torch.sum(torch.exp(self.state['log_w'][1:self.active_K]), dim=1)
+        log_w = sample_w_proportion(self.state['m'][1:self.active_K], self.state['log_w_0'], w_bar)
+        self.state['log_w'] = torch.cat([self.state['log_w'][0:1], log_w, self.state['log_w'][self.active_K::]], dim=0)
 
     def update_pi(self):
-        m_tmp = torch.sum(self.state['m'], dim=1)  # the number of links in each clusters, first row corresponds to cluster 0.
-        parameter = torch.cat([torch.Tensor([self.hyper_paras['alpha']]), m_tmp[1:self.active_K]], dim=0)
-        pi_tmp = Dirichlet(parameter).sample()
-        self.state['pi'] = torch.cat([pi_tmp, torch.zeros(self.max_K - self.active_K)], dim=0)
+        # the number of links in each clusters, first row corresponds to cluster 0.
+        pi = sample_pi(self.state['n'][1:self.active_K], self.hyper_paras['alpha'])
+        self.state['pi'] = torch.cat([pi, torch.zeros(self.max_K - self.active_K)], dim=0)
 
     def update_c(self):
-        self.state['c'] = compute_c(self.state['pi'], self.state['w'], self.state['z'])
+         c = compute_c(self.state['pi'][0:self.active_K], self.state['log_w'][0:self.active_K], self.state['z'])
+         self.state['c'] = c
 
     def update_z(self):
         self.state['z'] = compute_z(self.state['w'], self.state['c'], self.graph_sparse)
@@ -98,7 +85,7 @@ class BNPGraphModel(object):
     def update_w_0_total(self):
         log_prob_fn = functools.partial(self.log_prob_wrt_w_0, w_k=self.state['w_k'],
                                         u=self.u)
-        self.w_0_mh.one_step(state=self.state['w_0'], log_prob_fn=log_prob_fn)
+        self.w_0_mh_sampler.one_step(state=self.state['w_0'], log_prob_fn=log_prob_fn)
 
     @staticmethod
     def log_prob_wrt_w_0(w_0, w_k, u):
@@ -109,9 +96,14 @@ class BNPGraphModel(object):
             return (2.0 * n_k + w_0 - 1.0) * torch.log(w_k) - tau * w_k - w_k * w_k * pi_k
 
     def update_w_total(self):
-        log_prob_fn = functools.partial(self.log_prob_wrt_w_k, n_k=torch.sum(self.state['m'], dim=1) , w_0=self.state['w_0'],
+        log_prob_fn = functools.partial(self.log_prob_wrt_w_k, n_k=torch.sum(self.state['m'], dim=1), w_0=self.state['w_0'],
                                         tau=self.hyper_paras['tau'], pi_k=self.state['pi'])
-        self.w_k_mh.one_step(state=self.state['w_k'], log_prob_fn=log_prob_fn)
+        self.w_k_mh_sampler.one_step(state=self.state['w_k'], log_prob_fn=log_prob_fn)
 
+    def update_w_0_proportion(self):
+        pass
 
+    @staticmethod
+    def log_prob_wrt_w_0_bar(n_k, w_0, u, v):
+        return torch.sum(torch.lgamma(n_k + w_0) - torch.lgamma(w_0)) + torch.sum(torch.log(v(w_0)))  # TODO
 

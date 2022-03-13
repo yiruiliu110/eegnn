@@ -17,6 +17,6 @@ w = Gamma(concentration=1., rate=1.).sample([max_K, node_number]) * 5.0
 
 pi = torch.cat((torch.ones(initial_K) / initial_K, torch.zeros(max_K - initial_K)), 0)
 
-c = compute_c(pi, w, z)
+c = compute_c(pi, torch.log(w), z)
 
 print(c)
