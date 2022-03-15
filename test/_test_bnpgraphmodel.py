@@ -21,22 +21,46 @@ sigma = 0.5
 
 
 #### test 0
-model = BNPGraphModel(graph, alpha, tau, gamma, sigma, initial_K=20, max_K=100)
+model = BNPGraphModel(graph, alpha, tau, gamma, sigma, initial_K=2, max_K=5)
 print(model.state)
 
 #### test 1
 model.update_w_proportion()
-print(model.state['log_w'])
+print('log_w', model.state['log_w'])
 
 #### test 2
 model.update_pi()
-print(model.state['pi'])
+print('pi', model.state['pi'])
 
 #### test 3
 model.update_c()
-print(model.state['c'])
+print('c', model.state['c'])
 
-#### test 3
+#### test 4
 model.update_z()
-print(model.state['z'])
+print('z', model.state['z'])
 
+#### test 5
+print('log_w_0', model.state['log_w_0'])
+print('log_w_0_total', model.state['log_w_0_total'])
+for i in range(1000):
+    model.update_w_0_total()
+print('log_w_0', model.state['log_w_0'])
+print('log_w_0_total', model.state['log_w_0_total'])
+
+#### test 6
+print('log_w_total', model.state['log_w_total'])
+for i in range(1000):
+    model.update_w_total()
+print('log_w_total', model.state['log_w_total'])
+print('log_w_0_total', model.state['log_w_0_total'])
+
+
+#### test 7
+print('log_w_total', model.state['log_w_total'])
+for i in range(10):
+    model.update_w_0_proportion()
+    print('log_w_total', model.state['log_w_total'])
+
+#### test 8
+model.fit(100)

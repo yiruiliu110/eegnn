@@ -26,6 +26,8 @@ def build_initials(initial_K, max_K, graph_sparse, node_number, edge_number):
                                      values=torch.randint(low=1, high=initial_K, size=(edge_number,)), # initial_K includes the cluster 0.
                                      size=size),
     }
+    state['log_w_0_total'] = torch.log(torch.sum(torch.exp(state['log_w_0'])))
+    state['log_w_total'] = torch.log(torch.sum(torch.exp(state['log_w']), dim=1))
 
     state['m'] = compute_m(state['z'], state['c'], max_K)
     state['n'] = compute_n(state['m'])   # n_k
