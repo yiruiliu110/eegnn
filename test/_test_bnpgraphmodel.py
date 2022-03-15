@@ -36,3 +36,7 @@ print(model.state['pi'])
 model.update_c()
 print(model.state['c'])
 
+#### test 3
+model.update_z()
+print(model.state['z'])
+

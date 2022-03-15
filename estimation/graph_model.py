@@ -4,9 +4,9 @@ This file contain the class for Bayesian nonparametric graph model
 import functools
 
 import torch
-from torch.distributions import Gamma, Dirichlet
 
-from estimation.build_initials import build_initials
+from estimation.add_k import add_k
+from estimation.build_initials import build_initials, compute_n
 from estimation.compute_m import compute_m
 from estimation.hmc import HamiltonMonteCarlo
 from estimation.mh import MetropolisHastings
@@ -14,6 +14,18 @@ from estimation.sample_c import compute_c
 from estimation.sample_pi import sample_pi
 from estimation.sample_w_proportion import sample_w_proportion
 from estimation.sample_z import compute_z
+
+
+def log_prob_wrt_w_0_total(w_0, w_k, u):
+    return torch.log(u(w_0)) + w_0 * torch.sum(torch.log(w_k)) - torch.tensor(w_k.size()) * torch.lgamma(w_0)
+
+
+def log_prob_wrt_w_k_total(w_k, n_k, w_0, pi_k):
+    return (2.0 * n_k + w_0 - 1.0) * torch.log(w_k) - w_k - w_k * w_k * pi_k
+
+
+def log_prob_wrt_w_0_proportional(n_k, w_0, u, v):
+    return torch.sum(torch.lgamma(n_k + w_0) - torch.lgamma(w_0)) + torch.sum(torch.log(v(w_0)))  # TODO
 
 
 class BNPGraphModel(object):
@@ -24,7 +36,8 @@ class BNPGraphModel(object):
                  gamma: float,
                  sigma: float = 0.0,
                  initial_K: int = 20,
-                 max_K: int = 100):
+                 max_K: int = 100,
+                 cmr: str = 'gamma'):
 
         # B convention, we just need to infer upper triangle's n_ij
         dense_graph = torch.triu(graph.to_dense())
@@ -56,14 +69,20 @@ class BNPGraphModel(object):
         self.w_k_mh_sampler = MetropolisHastings()
         self.w_0_proportion_sampler = HamiltonMonteCarlo()
 
+        if cmr == 'gamma':
+            self.u = lambda s: 1.0 / s * torch.exp(-s)
+            self.v = lambda x: 1.0 / torch.exp(torch.lgamma(alpha)) * x ** (alpha - 1.0) * torch.exp(-x)
+
     def one_step(self):
+        self.state['m'] = compute_m(self.state['z'], self.state['c'], self.max_K)
+        self.state['n'] = compute_n(self.state['m'])
         self.update_w_0_proportion()
         self.update_w_proportion()
         self.update_pi()
-        self.update_c()
-        self.update_z()
         self.update_w_0_total()
         self.update_w_total()
+        self.update_z()
+        self.update_c()
 
     def update_w_proportion(self):
         w_bar = torch.sum(torch.exp(self.state['log_w'][1:self.active_K]), dim=1)
@@ -76,34 +95,25 @@ class BNPGraphModel(object):
         self.state['pi'] = torch.cat([pi, torch.zeros(self.max_K - self.active_K)], dim=0)
 
     def update_c(self):
-         c = compute_c(self.state['pi'][0:self.active_K], self.state['log_w'][0:self.active_K], self.state['z'])
-         self.state['c'] = c
+        c = compute_c(self.state['pi'][0:self.active_K], self.state['log_w'][0:self.active_K], self.state['z'])
+        self.state['c'] = add_k(c, self.active_K)
+        self.active_K += 1
 
     def update_z(self):
-        self.state['z'] = compute_z(self.state['w'], self.state['c'], self.graph_sparse)
+        self.state['z'] = compute_z(self.state['log_w'][0:self.active_K], self.state['c'], self.graph_sparse)
 
     def update_w_0_total(self):
-        log_prob_fn = functools.partial(self.log_prob_wrt_w_0, w_k=self.state['w_k'],
+        log_prob_fn = functools.partial(log_prob_wrt_w_0_total, w_k=self.state['w_k'],
                                         u=self.u)
         self.w_0_mh_sampler.one_step(state=self.state['w_0'], log_prob_fn=log_prob_fn)
 
-    @staticmethod
-    def log_prob_wrt_w_0(w_0, w_k, u):
-            return torch.log(u(w_0)) + w_0 * torch.sum(torch.log(w_k)) - torch.tensor(w_k.size()) * torch.lgamma(w_0)
-
-    @staticmethod
-    def log_prob_wrt_w_k(w_k, n_k, w_0, tau, pi_k):
-            return (2.0 * n_k + w_0 - 1.0) * torch.log(w_k) - tau * w_k - w_k * w_k * pi_k
-
     def update_w_total(self):
-        log_prob_fn = functools.partial(self.log_prob_wrt_w_k, n_k=torch.sum(self.state['m'], dim=1), w_0=self.state['w_0'],
+        log_prob_fn = functools.partial(log_prob_wrt_w_k_total, n_k=torch.sum(self.state['m'], dim=1), w_0=self.state['w_0'],
                                         tau=self.hyper_paras['tau'], pi_k=self.state['pi'])
         self.w_k_mh_sampler.one_step(state=self.state['w_k'], log_prob_fn=log_prob_fn)
 
     def update_w_0_proportion(self):
         pass
 
-    @staticmethod
-    def log_prob_wrt_w_0_bar(n_k, w_0, u, v):
-        return torch.sum(torch.lgamma(n_k + w_0) - torch.lgamma(w_0)) + torch.sum(torch.log(v(w_0)))  # TODO
+
 
