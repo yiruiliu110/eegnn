@@ -30,9 +30,8 @@ def d_log_prob_wrt_w_0_proportional(w_0_proportion, m, w_0_total, dlog_u, dlog_v
     sum_tmp = torch.sum(tmp)
     w_0_nonstar = tmp * (w_0_total / (sum_tmp + 1.))
     w_0_star = w_0_total / (sum_tmp + 1.)
-
     tmp = torch.sum(torch.digamma(m + w_0_nonstar) - torch.digamma(w_0_nonstar), dim=0) \
-          + dlog_v(w_0_nonstar)  - dlog_u(w_0_star)  # outputshape: (|V|, )
+          + dlog_v(w_0_nonstar) - dlog_u(w_0_star)  # outputshape: (|V|, )
 
     result = tmp * w_0_proportion * (1.0 - w_0_proportion)
 

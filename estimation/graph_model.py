@@ -55,9 +55,9 @@ class BNPGraphModel(object):
             'tau': tau,
         }
 
-        self.w_0_mh_sampler = MetropolisHastings()
-        self.w_k_mh_sampler = MetropolisHastings()
-        self.w_0_proportion_sampler = HamiltonMonteCarlo(is_independent=False)
+        self.w_0_mh_sampler = MetropolisHastings(initial_step_size=0.1)
+        self.w_k_mh_sampler = MetropolisHastings(initial_step_size=0.1)
+        self.w_0_proportion_sampler = HamiltonMonteCarlo(is_independent=False, initial_step_size=0.1)
 
         if cmr == 'gamma':
             log_v = lambda s: - torch.log(s) - s
@@ -72,9 +72,11 @@ class BNPGraphModel(object):
     def one_step(self):
         self.state['m'] = compute_m(self.state['z'], self.state['c'], self.max_K)
         self.state['n'] = compute_n(self.state['m'])
+        print('W_0_total')
         self.update_w_0_total()
+        print('W_0_proportion')
         self.update_w_0_proportion()
-
+        print('W_k')
         self.update_w_total()
         self.update_w_proportion()
 
@@ -86,11 +88,11 @@ class BNPGraphModel(object):
         for i in range(epochs):
             print('number of epoch', i)
             self.one_step()
-            print(self.state)
+            #print(self.state)
 
     def update_w_proportion(self):
-        w_bar = self.state['log_w_total'][1:self.active_K]
-        log_w = sample_w_proportion(self.state['m'][1:self.active_K], self.state['log_w_0'], w_bar)
+        log_w_bar = self.state['log_w_total'][1:self.active_K]
+        log_w = sample_w_proportion(self.state['m'][1:self.active_K], self.state['log_w_0'], log_w_bar)
         self.state['log_w'] = torch.cat([self.state['log_w'][0:1], log_w, self.state['log_w'][self.active_K::]], dim=0)
 
     def update_pi(self):
@@ -100,8 +102,7 @@ class BNPGraphModel(object):
 
     def update_c(self):
         c = compute_c(self.state['pi'][0:self.active_K], self.state['log_w'][0:self.active_K], self.state['z'])
-        self.state['c'] = add_k(c, self.active_K)
-        self.active_K += 1
+        self.state['c'], self.active_K = add_k(c, self.active_K, self.max_K)
 
     def update_z(self):
         self.state['z'] = compute_z(self.state['log_w'][0:self.active_K], self.state['c'], self.graph_sparse)
@@ -111,6 +112,7 @@ class BNPGraphModel(object):
                                         log_u=self.log_u)
         new_log_w_0_total = self.w_0_mh_sampler.one_step(state=self.state['log_w_0_total'], log_prob_fn=log_prob_fn)
         self.state['log_w_0_total'] = new_log_w_0_total
+        print(self.state['log_w_0_total'] )
 
     def update_w_total(self):
         log_prob_fn = functools.partial(log_prob_wrt_w_k_total, n=self.state['n'][1:self.active_K],
@@ -142,6 +144,5 @@ class BNPGraphModel(object):
         new_log_w = torch.exp(tmp) / torch.sum(torch.exp(tmp))
 
         self.state['log_w_0'] = torch.cat([self.state['log_w_0'][0:1],
-                                           new_log_w,
-                                           self.state['log_w_0'][self.active_K::]],
+                                           new_log_w],
                                           dim=0)

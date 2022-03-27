@@ -34,6 +34,8 @@ class MetropolisHastings:
 
             propose_log_prob = log_prob_fn(proposed_state)
 
+            if propose_log_prob.size() != self.last_step_log_prob.size():
+                self.last_step_log_prob = torch.cat([self.last_step_log_prob, torch.zeros(1)], 0)
             log_accept_ratio = propose_log_prob - self.last_step_log_prob
 
             new_state, accepted = self.mh_accept(proposed_state, state, log_accept_ratio)

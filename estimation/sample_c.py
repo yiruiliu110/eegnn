@@ -19,7 +19,7 @@ def compute_c(pi: torch.Tensor, log_w: torch.tensor, z: torch.sparse):
     indices = z._indices()
     indices_0, indices_1 = indices[0], indices[1]
     weight = torch.index_select(log_w, 1, indices_0) + torch.index_select(log_w, 1, indices_1)\
-             + torch.log(torch.unsqueeze(pi, dim=1) + 1e-18)
+             + torch.log(torch.unsqueeze(pi, dim=1) + 1e-15)
 
     c_tmp = Categorical(logits=torch.transpose(weight, 0, 1)).sample()
 

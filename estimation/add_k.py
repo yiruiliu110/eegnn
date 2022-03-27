@@ -4,18 +4,19 @@ This script is used to add a new cluster.
 import torch
 
 
-def add_k(c, active_K):
+def add_k(c, active_K, max_k):
     """
     replace the cluster indictors of 0 to active_K+1
     :param c: a sparse matrix to indicate the cluster membership.
     :return: a new sparse matrix to indicate the cluster membership.
     """
     indices = c._indices()
-
-    values = torch.where(c._values() == 0, active_K, c._values())
-
+    if torch.sum((c._values() == 0).int()) != 0:
+        active_K = min(active_K+1, max_k)
+    values = torch.where(c._values() == 0, active_K-1, c._values())
     c = torch.sparse_coo_tensor(indices, values, c.size())
-    return c
+
+    return c, active_K
 
 
 if __name__ == "__main__":

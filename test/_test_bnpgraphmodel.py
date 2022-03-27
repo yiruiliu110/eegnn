@@ -21,7 +21,7 @@ sigma = 0.5
 
 
 #### test 0
-model = BNPGraphModel(graph, alpha, tau, gamma, sigma, initial_K=2, max_K=5)
+model = BNPGraphModel(graph, alpha, tau, gamma, sigma, initial_K=3, max_K=100)
 print(model.state)
 
 #### test 1
@@ -62,5 +62,3 @@ for i in range(10):
     model.update_w_0_proportion()
     print('log_w_total', model.state['log_w_total'])
 
-#### test 8
-model.fit(100)
