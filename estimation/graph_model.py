@@ -55,9 +55,9 @@ class BNPGraphModel(object):
             'tau': tau,
         }
 
-        self.w_0_mh_sampler = MetropolisHastings(initial_step_size=0.1)
-        self.w_k_mh_sampler = MetropolisHastings(initial_step_size=0.1)
-        self.w_0_proportion_sampler = HamiltonMonteCarlo(is_independent=False, initial_step_size=0.1)
+        self.w_0_mh_sampler = MetropolisHastings(initial_step_size=1.0)
+        self.w_k_mh_sampler = MetropolisHastings(initial_step_size=1.0)
+        self.w_0_proportion_sampler = HamiltonMonteCarlo(is_independent=False, initial_step_size=1.0)
 
         if cmr == 'gamma':
             log_v = lambda s: - torch.log(s) - s
@@ -72,11 +72,9 @@ class BNPGraphModel(object):
     def one_step(self):
         self.state['m'] = compute_m(self.state['z'], self.state['c'], self.max_K)
         self.state['n'] = compute_n(self.state['m'])
-        print('W_0_total')
         self.update_w_0_total()
-        print('W_0_proportion')
+
         self.update_w_0_proportion()
-        print('W_k')
         self.update_w_total()
         self.update_w_proportion()
 
@@ -88,7 +86,7 @@ class BNPGraphModel(object):
         for i in range(epochs):
             print('number of epoch', i)
             self.one_step()
-            #print(self.state)
+            print(self.state)
 
     def update_w_proportion(self):
         log_w_bar = self.state['log_w_total'][1:self.active_K]
@@ -112,7 +110,6 @@ class BNPGraphModel(object):
                                         log_u=self.log_u)
         new_log_w_0_total = self.w_0_mh_sampler.one_step(state=self.state['log_w_0_total'], log_prob_fn=log_prob_fn)
         self.state['log_w_0_total'] = new_log_w_0_total
-        print(self.state['log_w_0_total'] )
 
     def update_w_total(self):
         log_prob_fn = functools.partial(log_prob_wrt_w_k_total, n=self.state['n'][1:self.active_K],

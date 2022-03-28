@@ -13,7 +13,8 @@ def add_k(c, active_K, max_k):
     indices = c._indices()
     if torch.sum((c._values() == 0).int()) != 0:
         active_K = min(active_K+1, max_k)
-    values = torch.where(c._values() == 0, active_K-1, c._values())
+    #random_index = torch.randint(low=1, high=active_K, size=c._values().size())
+    values = torch.where(c._values() == 0, active_K-1, c._values())  #TODO active_K-1, random_index
     c = torch.sparse_coo_tensor(indices, values, c.size())
 
     return c, active_K
