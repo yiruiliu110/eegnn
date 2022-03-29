@@ -3,35 +3,49 @@ This script is used to add a new cluster.
 """
 import torch
 
+from estimation.stirling_number import stirling_number
 
-def build_injection(count, active_K, max_k):
+
+def build_injection(count, active_K, max_k, alpha):
+    print('count', count)
     with_sample_indices = count > 0
+
     without_sample_indices = count <= 0
 
     remaining_indices = torch.squeeze(torch.cat([torch.tensor([True]), with_sample_indices[1::]], dim=0).nonzero())
+
     deleting_indices = torch.squeeze(torch.cat([torch.tensor([False]), without_sample_indices[1::]], dim=0).nonzero())
+    #print('deleting_indices', deleting_indices)
 
     dict_tmp = {}
-    index = 1
+    index = 0
     for j in range(1, active_K):
         if with_sample_indices[j]:
-            dict_tmp[j] = index
             index += 1
+            dict_tmp[j] = index
+            #print(j, index)
 
-    new_active_K = len(dict_tmp) + 1
-    if new_active_K + 1 <= max_k:
-        dict_tmp[0] = new_active_K
-        new_active_K += 1
+
+    old_active_K = index + 1
+    #print('old_active_K', old_active_K)
+    add_number = stirling_number(count[0], alpha)
+    #print('add_number', add_number)
+    if old_active_K + add_number <= max_k:
+        new_active_K = old_active_K + add_number
     else:
-        dict_tmp[0] = torch.randint(low=1, high=max_k, size=()).item()
+        new_active_K = max_k
 
     def fn(x):
-        return dict_tmp[x]
+        if x == 0:
+            return torch.randint(low=1, high=new_active_K, size=()).item()
+        else:
+            return dict_tmp[x]
 
+    #print('new_active_K', new_active_K)
     return fn, new_active_K, remaining_indices, deleting_indices
 
 
-def add_k(c, pi, log_w, active_K, max_k):
+def add_k(c, log_w, active_K, max_k, alpha):
     """
     replace the cluster indictors of 0 to active_K+1
     :param c: a sparse matrix to indicate the cluster membership.
@@ -43,18 +57,17 @@ def add_k(c, pi, log_w, active_K, max_k):
     values_one_hot = torch.nn.functional.one_hot(values, num_classes=active_K)
     count = torch.sum(values_one_hot, dim=0)
 
-    fn, new_active_K, remaining_indices, deleting_indices = build_injection(count, active_K, max_k)
+    fn, new_active_K, remaining_indices, deleting_indices = build_injection(count, active_K, max_k,alpha)
 
     values = values.apply_(fn)  #TODO active_K-1, random_index
 
     c = torch.sparse_coo_tensor(indices, values, c.size())
-    pi_remaining = torch.index_select(pi, dim=0, index=remaining_indices)
-    pi = torch.cat([pi_remaining, torch.zeros(max_k - new_active_K)], dim=0)
+
     log_w_remaining = torch.index_select(log_w, dim=0, index=remaining_indices)
     log_w_deleting = torch.index_select(log_w, dim=0, index=deleting_indices)
     log_w = torch.cat([log_w_remaining, log_w_deleting], dim=0)
 
-    return c, pi, log_w, new_active_K
+    return c, log_w, new_active_K
 
 
 if __name__ == "__main__":

@@ -2,15 +2,18 @@ import torch
 
 from estimation.graph_model import BNPGraphModel
 
-from torch_geometric.datasets import Planetoid
+from ogb.graphproppred import PygGraphPropPredDataset
+from torch_geometric.loader import DataLoader
 
-dataset = Planetoid(root='/Users/yiruiliu/PycharmProjects/pythonProject/Cora', name='Cora')
+# Download and process data at './dataset/ogbg_molhiv/'
+dataset = PygGraphPropPredDataset(name = 'ogbg-arxiv')
+
 print(len(dataset))  # 1
 print(dataset.num_classes)  # 7
-print(dataset.num_features)  # 1433
+#print(dataset.num_features)  # 1433
 
 # Here, the dataset contains only a single, undirected citation graph:
-data = dataset[0]  # Data(x=[2708, 1433], edge_index=[2, 10556], y=[2708], train_mask=[2708],
+data = dataset  # Data(x=[2708, 1433], edge_index=[2, 10556], y=[2708], train_mask=[2708],
 #                           val_mask=[2708], test_mask=[2708])
 print(data)
 

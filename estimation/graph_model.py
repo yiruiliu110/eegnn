@@ -86,22 +86,24 @@ class BNPGraphModel(object):
         for i in range(epochs):
             print('number of epoch', i)
             self.one_step()
-            print(self.state['c']._values()[0:20])
+            #print(self.state['c']._values()[0:20])
             #print(self.state['pi'][0:10])
 
     def update_w_proportion(self):
         log_w_bar = self.state['log_w_total'][1:self.active_K]
         log_w = sample_w_proportion(self.state['m'][1:self.active_K], self.state['log_w_0'], log_w_bar)
-        self.state['log_w'] = torch.cat([torch.unsqueeze(self.state['log_w_0'], dim=0), log_w, self.state['log_w'][self.active_K::]], dim=0)
+        self.state['log_w'] = torch.cat([torch.unsqueeze(self.state['log_w_0'], dim=0) - torch.log(torch.sum(torch.exp(self.state['log_w_0']))),
+                                         log_w, self.state['log_w'][self.active_K::]], dim=0)
 
     def update_pi(self):
         # the number of links in each clusters, first row corresponds to cluster 0.
         pi = sample_pi(self.state['n'][1:self.active_K], self.hyper_paras['gamma'])
         self.state['pi'] = torch.cat([pi, torch.zeros(self.max_K - self.active_K)], dim=0)
+        #print('pi', self.state['pi'])
 
     def update_c(self):
         c = compute_c(self.state['pi'][0:self.active_K], self.state['log_w'][0:self.active_K], self.state['z'])
-        self.state['c'], self.state['pi'], self.state['log_w'], self.active_K = add_k(c, self.state['pi'], self.state['log_w'], self.active_K, self.max_K)
+        self.state['c'],  self.state['log_w'], self.active_K = add_k(c, self.state['log_w'], self.active_K, self.max_K, self.hyper_paras['alpha'])
 
     def update_z(self):
         self.state['z'] = compute_z(self.state['log_w'][0:self.active_K], self.state['c'], self.graph_sparse)

@@ -4,7 +4,7 @@ from estimation.graph_model import BNPGraphModel
 
 from torch_geometric.datasets import Planetoid
 
-dataset = Planetoid(root='/Users/yiruiliu/PycharmProjects/pythonProject/Cora', name='Cora')
+dataset = Planetoid(root='/Users/yiruiliu/PycharmProjects/pythonProject/PubMed', name='PubMed')
 print(len(dataset))  # 1
 print(dataset.num_classes)  # 7
 print(dataset.num_features)  # 1433
