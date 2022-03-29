@@ -20,12 +20,12 @@ number_of_edges = data.edge_index.size()[1]
 graph = torch.sparse_coo_tensor(data.edge_index, torch.ones(number_of_edges), [number_of_nodes, number_of_nodes])
 print(graph)
 
-alpha = 5.
+alpha = 500.
 tau = 1.0
-gamma = 1.0
+gamma = 5.0
 sigma = 0.5
 
 #### test 0
 model = BNPGraphModel(graph, alpha, tau, gamma, sigma, initial_K=3, max_K=200)
 #### test 8
-model.fit(1000)
+model.fit(50000)
