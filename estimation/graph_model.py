@@ -4,6 +4,7 @@ This file contain the class for Bayesian nonparametric graph model
 import functools
 
 import torch
+from torch.distributions import Categorical
 
 from estimation.add_k import add_k
 from estimation.build_initials import build_initials, compute_n
@@ -146,3 +147,13 @@ class BNPGraphModel(object):
         self.state['log_w_0'] = torch.cat([self.state['log_w_0'][0:1],
                                            new_log_w],
                                           dim=0)
+
+    def sample(self):
+        total_weight = self.state['pi'][1:self.active_K] * self.state['log_w_total'][1:self.active_K]
+        print('total_weight', total_weight,)
+        total_number_edges = torch.maximum(torch.poisson(total_weight), torch.ones_like(total_weight))
+        print('total_number_edges', total_number_edges)
+
+        edge_index = torch.cat([Categorical(logits=self.state['log_w'][i]).sample([2, int(total_number_edges[i-1].item())]) for i in range(1, self.active_K)], dim=1)
+
+        return edge_index
