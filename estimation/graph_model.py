@@ -58,9 +58,9 @@ class BNPGraphModel(object):
             'tau': tau,  # 1.0
         }
 
-        self.w_0_mh_sampler = MetropolisHastings(initial_step_size=1.0)
-        self.w_k_mh_sampler = MetropolisHastings(initial_step_size=1.0)
-        self.w_0_proportion_sampler = HamiltonMonteCarlo(is_independent=False, initial_step_size=1.0)
+        self.w_0_mh_sampler = MetropolisHastings(initial_step_size=0.01)
+        self.w_k_mh_sampler = MetropolisHastings(initial_step_size=0.01)
+        self.w_0_proportion_sampler = HamiltonMonteCarlo(is_independent=True, initial_step_size=0.01, num_leapfrog_steps=2)
 
         if cmr == 'gamma':
             log_v = lambda s: - torch.log(s) - s
@@ -102,6 +102,7 @@ class BNPGraphModel(object):
     def update_pi(self):
         # the number of links in each clusters, first row corresponds to cluster 0.
         pi = sample_pi(self.state['n'][0:self.active_K], self.hyper_paras['gamma'])
+        #print('pi', pi)
         self.state['pi'] = torch.cat([pi, torch.zeros(self.max_K - self.active_K)], dim=0)
 
     def update_c(self):
@@ -112,14 +113,15 @@ class BNPGraphModel(object):
         self.state['z'] = compute_z(self.state['log_w'][0:self.active_K], self.state['pi'], self.state['c'])
 
     def adjust_cluster_number(self):
-        self.state['c'], self.active_K, remaining_indices, deleting_indices = add_k(
+        self.state['c'], self.active_K, remaining_indices = add_k(
             self.state['c'],
             self.active_K,
             self.max_K,
             self.hyper_paras['gamma']
         )
         for item in ['log_w_total', 'log_w', 'pi', 'm', 'n']:
-            self.state[item] = switch(self.state[item], remaining_indices, deleting_indices)
+            self.state[item] = switch(self.state[item], remaining_indices, self.max_K)
+        print('active_K', self.active_K)
 
     def update_w_0_total(self):
         log_prob_fn = functools.partial(log_prob_wrt_w_0_total, log_w_k_total=self.state['log_w_total'][1:self.active_K],
@@ -140,16 +142,16 @@ class BNPGraphModel(object):
                                                new_log_w_total,
                                                torch.squeeze(
                                                    Gamma(concentration=self.state['log_w_0_total'], rate=1.).sample(
-                                                   (self.max_K - self.active_K,)))],
+                                                   (self.max_K - self.active_K,)))],   #self.max_K needs to be larger than self.active_K
                                               dim=0)
 
     def update_w_0_proportion(self):
         log_prob_fn = functools.partial(log_prob_wrt_w_0_proportional,
-                                        m=self.state['m'][1:self.active_K],
+                                        m=self.state['m'][1:self.active_K, 0:-1],
                                         w_0_total=torch.exp(self.state['log_w_0_total']),
                                         log_u=self.log_u, log_v=self.log_v)
         d_log_prob_fn = functools.partial(d_log_prob_wrt_w_0_proportional,
-                                          m=self.state['m'][1:self.active_K],
+                                          m=self.state['m'][1:self.active_K, 0:-1],
                                           w_0_total=torch.exp(self.state['log_w_0_total']),
                                           dlog_u=self.dlog_u, dlog_v=self.dlog_v)
 
@@ -162,14 +164,17 @@ class BNPGraphModel(object):
         self.state['log_w_0'] = back_to_log_weight(tmp)
 
     @staticmethod
-    def gradient(d_log_prob_fn, inputs):
-        weight = back_to_weight(inputs)
+    def gradient(d_log_prob_fn, weight):
         derivative = d_log_prob_fn(weight)
-        return (derivative[0:-1] - torch.sum(derivative * weight)) * weight[0:-1]
+        grad = derivative * weight[0:-1]
+        return grad - torch.sum(grad * weight[0:-1])
 
     def sample(self):
         total_weight = self.state['pi'][1:self.active_K] * torch.exp(self.state['log_w_total'][1:self.active_K]) ** 2
+        print('total_weight ', total_weight )
         total_number_edges = torch.maximum(torch.poisson(total_weight), torch.ones_like(total_weight))
+        print(total_number_edges)
+        """
         self.total_number_sampled_edges = int(torch.sum(total_number_edges))
         print('total_number_edges', self.total_number_sampled_edges)
 
@@ -177,3 +182,4 @@ class BNPGraphModel(object):
             [Categorical(logits=self.state['log_w'][i][1::]).sample([2, int(total_number_edges[i - 1].item())]) for i in
              range(1, self.active_K)], dim=1)
         return edge_index
+        """

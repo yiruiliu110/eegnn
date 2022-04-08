@@ -34,6 +34,8 @@ class HamiltonMonteCarlo(MetropolisHastings):
 
             if not self.is_independent:
                 log_accept_ratio = torch.sum(log_accept_ratio)
+            torch.set_printoptions(profile='full')
+            #print('HMC', log_accept_ratio)
 
             new_state, _ = self.mh_accept(proposed_state, state, log_accept_ratio)
 

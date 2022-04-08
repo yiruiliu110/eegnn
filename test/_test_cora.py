@@ -22,10 +22,12 @@ print(graph)
 
 alpha = 10.0
 tau = 1.0
-gamma = 5.0
+gamma = 1.0
 sigma = 0.5
 
 #### test 0
-model = BNPGraphModel(graph, alpha, tau, gamma, sigma, initial_K=10, max_K=10)
+model = BNPGraphModel(graph, alpha, tau, gamma, sigma, initial_K=50, max_K=200)
 #### test 8
-model.fit(50000)
+model.fit(1000)
+
+model.sample()

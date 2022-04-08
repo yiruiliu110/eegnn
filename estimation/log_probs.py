@@ -13,19 +13,18 @@ def log_prob_wrt_w_k_total(log_w_k_total, n, log_w_0_total, pi):
     return (2.0 * n + w_0_total - 1.0) * log_w_k_total - w_k_total - w_k_total * w_k_total * pi
 
 
-def log_prob_wrt_w_0_proportional(w_0_proportion, m, w_0_total, log_u, log_v):
-    # w_0_proportion (|V|+1, )
-    w_0 = w_0_proportion * w_0_total
-    w_0_nonstar = w_0[0:-1]
-    w_0_star = w_0[-1]
-    return torch.sum(torch.lgamma(m + w_0) - torch.lgamma(w_0), dim=0) \
+def log_prob_wrt_w_0_proportional(w_0_proportion_nonstar, m, w_0_total, log_u, log_v):
+    # w_0_proportion (|V|, )
+    w_0_nonstar = w_0_proportion_nonstar[0:-1] * w_0_total
+    w_0_star = w_0_proportion_nonstar[-1] * w_0_total
+    return torch.sum(torch.lgamma(m + w_0_nonstar) - torch.lgamma(w_0_nonstar), dim=0) \
            + log_v(w_0_nonstar) + log_u(w_0_star)  # outputshape: (|V|, )
 
 
-def d_log_prob_wrt_w_0_proportional(w_0_proportion, m, w_0_total, dlog_u, dlog_v):
-    # w_0_proportion (|V|+1, )
-    w_0_nonstar = w_0_proportion * w_0_total
-    w_0_star = (1 - torch.sum(w_0_proportion)) * w_0_total
+def d_log_prob_wrt_w_0_proportional(w_0_proportion_nonstar, m, w_0_total, dlog_u, dlog_v):
+    # w_0_proportion (|V|, )
+    w_0_nonstar = w_0_proportion_nonstar[0:-1] * w_0_total
+    w_0_star = w_0_proportion_nonstar[-1] * w_0_total
     return torch.sum(torch.digamma(m + w_0_nonstar) - torch.digamma(w_0_nonstar), dim=0) \
            + dlog_v(w_0_nonstar) - dlog_u(w_0_star)  # outputshape: (|V|, )
 

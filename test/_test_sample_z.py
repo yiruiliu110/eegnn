@@ -1,5 +1,5 @@
 import torch
-from torch.distributions import Gamma
+from torch.distributions import Gamma, Dirichlet
 
 from estimation.sample_z import compute_z
 
@@ -15,6 +15,8 @@ max_K = 10
 node_number = 4
 w = Gamma(concentration=1., rate=1.).sample([max_K, node_number]) * 5.0
 
-z = compute_z(w, c, graph)
+pi = Dirichlet(torch.tensor([0.5, 0.5])).sample()
+
+z = compute_z(w, pi, c)
 
 print(z)

@@ -9,10 +9,8 @@ from estimation.stirling_number import stirling_number
 def build_injection(count, active_k, max_k, gamma):
     print('count', count)
     with_sample_indices = count > 0
-    without_sample_indices = count <= 0
 
     remaining_indices = torch.squeeze(torch.cat([torch.tensor([True]), with_sample_indices[1::]], dim=0).nonzero())
-    deleting_indices = torch.squeeze(torch.cat([torch.tensor([False]), without_sample_indices[1::]], dim=0).nonzero())
 
     dict_tmp = {}
     index = 0
@@ -35,7 +33,7 @@ def build_injection(count, active_k, max_k, gamma):
         else:
             return dict_tmp[x]
 
-    return fn, new_active_K, remaining_indices, deleting_indices
+    return fn, new_active_K, remaining_indices
 
 
 def add_k(c, active_k, max_k, gamma):
@@ -50,20 +48,26 @@ def add_k(c, active_k, max_k, gamma):
     values_one_hot = torch.nn.functional.one_hot(values, num_classes=active_k)
     count = torch.sum(values_one_hot, dim=0)
 
-    fn, new_active_K, remaining_indices, deleting_indices = build_injection(count, active_k, max_k, gamma)
+    fn, new_active_K, remaining_indices = build_injection(count, active_k, max_k, gamma)
 
     values = values.apply_(fn)
 
     c = torch.sparse_coo_tensor(indices, values, c.size())
 
-    return c, new_active_K, remaining_indices, deleting_indices
+    return c, new_active_K, remaining_indices
 
 
-def switch(inputs, remaining_indices, deleting_indices):
+def switch(inputs, remaining_indices, max_k):
     remaining = torch.index_select(inputs, dim=0, index=remaining_indices)
+    deleting_indices = generating_deleting_indices(max_k, remaining_indices)
     deleting = torch.index_select(inputs, dim=0, index=deleting_indices)
     outputs = torch.cat([remaining, deleting], dim=0)
     return outputs
+
+
+def generating_deleting_indices(max_k, remaining_indices):
+    deleting_indices = torch.tensor([int(item) for item in torch.range(0, max_k-1) if item not in remaining_indices])
+    return deleting_indices
 
 
 if __name__ == "__main__":
