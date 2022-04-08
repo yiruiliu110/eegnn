@@ -18,10 +18,11 @@ def compute_c(pi: torch.Tensor, log_w: torch.tensor, z: torch.sparse):
     # construct a N X active_K matrix, N is the number of observed edges
     indices = z._indices()
     indices_0, indices_1 = indices[0], indices[1]
-    weight = torch.index_select(log_w, 1, indices_0) + torch.index_select(log_w, 1, indices_1)\
-             + torch.log(torch.unsqueeze(pi, dim=1) + 1e-15)
+    weight = (torch.index_select(log_w, 1, indices_0) + torch.index_select(log_w, 1, indices_1)) * 2.0\
+             + torch.log(torch.unsqueeze(pi, dim=1) + 1e-4)
 
     c_tmp = Categorical(logits=torch.transpose(weight, 0, 1)).sample()
 
     c = torch.sparse_coo_tensor(indices, c_tmp, z.size())
+    print('c', c._values()[0:25])
     return c

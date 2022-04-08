@@ -17,10 +17,11 @@ def build_initials(initial_K, max_K, graph_sparse, node_number, edge_number):
 
     state = {
         'pi': torch.cat([torch.ones(initial_K) / initial_K, torch.zeros(max_K - initial_K)]),  # max_K includes the cluster 0.
-        'log_w_0': torch.log(Gamma(concentration=1., rate=1.).sample([node_number + 1])),
-        'log_w': torch.log(Gamma(concentration=1., rate=1.).sample([max_K, node_number + 1])),
+        'log_w_0': torch.ones(node_number + 1),  # index -1 is the unobserved node
+
+        'log_w': torch.ones(max_K, node_number + 1),
         'z': torch.sparse_coo_tensor(indices=indices,
-                                     values=torch.randint(low=1, high=5, size=(edge_number,)),
+                                     values=torch.randint(low=1, high=2, size=(edge_number,)),
                                      size=size),
         'c': torch.sparse_coo_tensor(indices=indices,
                                      values=torch.randint(low=1, high=initial_K, size=(edge_number,)), # initial_K includes the cluster 0.

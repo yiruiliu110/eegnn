@@ -23,4 +23,5 @@ def compute_m(z: torch.sparse, c: torch.sparse, max_K: int):
 
     m = torch.transpose(values.to_dense(), 0, 1)  # active_K X node_number
     m = torch.cat([m, torch.zeros(max_K - m.size()[0], m.size()[1])])
+    m = torch.cat([m, torch.zeros(max_K, 1)], dim=1)
     return m
