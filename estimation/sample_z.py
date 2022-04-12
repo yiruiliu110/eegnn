@@ -20,7 +20,7 @@ def compute_z(log_w: torch.tensor, pi: torch.sparse, c: torch.sparse):
     poisson_para_tmp = torch.index_select(log_w, 1, indices_0) + torch.index_select(log_w, 1, indices_1)   # K(the number of clusters) X number of edges
     poisson_para = torch.gather(poisson_para_tmp * 2.0, dim=0, index=torch.unsqueeze(c._values(), 0))   # https://zhuanlan.zhihu.com/p/352877584
     poisson_para *= torch.index_select(pi, dim=0, index=c._values())
-    samples = TruncatedPoisson(torch.squeeze(torch.exp(poisson_para) + 1e-15)).sample()
+    samples = TruncatedPoisson(torch.squeeze(torch.exp(poisson_para) + 1e-10)).sample()
 
     z = torch.sparse_coo_tensor(indices, samples, c.size())
 

@@ -11,10 +11,11 @@ def sample_w_proportion(m, log_w_0, log_w_bar):
     :return: log_w : (active_K - 1) X (number_of_nodes + 1)
     """
     concentration = m + torch.exp(log_w_0)
-    #print('torch.exp(log_w_0)', torch.exp(log_w_0))
+    #print('AA', torch.max(log_w_0))
     #print('torch.cat([torch.zeros(m.size()[0], 1), m], dim=1)', torch.cat([torch.zeros(m.size()[0], 1), m], dim=1))
     w_tmp = Gamma(concentration=concentration, rate=1.).sample()  # max_K X number_nodes
     log_w = torch.log(w_tmp + 1e-15) - torch.log(torch.sum(w_tmp, dim=1, keepdim=True) + 1e-15) + torch.unsqueeze(log_w_bar, dim=1)
+    #print('BB', torch.max(log_w))
     return log_w
 
 

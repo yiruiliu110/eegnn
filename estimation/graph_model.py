@@ -58,8 +58,8 @@ class BNPGraphModel(object):
             'tau': tau,  # 1.0
         }
 
-        self.w_0_mh_sampler = MetropolisHastings(initial_step_size=0.01)
-        self.w_k_mh_sampler = MetropolisHastings(initial_step_size=0.01)
+        self.w_0_mh_sampler = MetropolisHastings(initial_step_size=0.1)
+        self.w_k_mh_sampler = MetropolisHastings(initial_step_size=1.0)
         self.w_0_proportion_sampler = HamiltonMonteCarlo(is_independent=True, initial_step_size=0.01, num_leapfrog_steps=2)
 
         if cmr == 'gamma':
@@ -91,13 +91,15 @@ class BNPGraphModel(object):
 
     def fit(self, epochs):
         for i in range(epochs):
+            #print('maxxx', torch.max(self.state['log_w'][0]), torch.min(self.state['log_w'][0]))
             print('number of epoch', i)
             self.one_step()
+            print('log likelihood', self.log_likelihood())
 
     def update_w_proportion(self):
-        log_w = sample_w_proportion(self.state['m'][0:self.active_K], self.state['log_w_0'],
-                                    self.state['log_w_total'][0:self.active_K])
-        self.state['log_w'] = torch.cat([log_w, self.state['log_w'][self.active_K::]], dim=0)
+        log_w = sample_w_proportion(self.state['m'][1:self.active_K], self.state['log_w_0'],
+                                    self.state['log_w_total'][1:self.active_K])
+        self.state['log_w'] = torch.cat([torch.unsqueeze(self.state['log_w_0'], 0), log_w, self.state['log_w'][self.active_K::]], dim=0)
 
     def update_pi(self):
         # the number of links in each clusters, first row corresponds to cluster 0.
@@ -131,18 +133,18 @@ class BNPGraphModel(object):
 
     def update_w_total(self):
         # cluster 0
-        new_log_w_total_0 = Gamma(concentration=self.state['log_w_0_total'], rate=1.).sample()
+        new_log_w_total_0 = torch.log(Gamma(concentration=torch.exp(self.state['log_w_0_total']) + 1e-10, rate=1.).sample())
         # other clusters
-        log_prob_fn = functools.partial(log_prob_wrt_w_k_total, n=self.state['n'][1:self.active_K],
+        log_prob_fn = functools.partial(log_prob_wrt_w_k_total, n=self.state['n'][1:self.active_K]/2,
                                         log_w_0_total=self.state['log_w_0_total'],
                                         pi=self.state['pi'][1:self.active_K])
         new_log_w_total = self.w_k_mh_sampler.one_step(state=self.state['log_w_total'][1:self.active_K],
                                                        log_prob_fn=log_prob_fn)
         self.state['log_w_total'] = torch.cat([new_log_w_total_0,
                                                new_log_w_total,
-                                               torch.squeeze(
-                                                   Gamma(concentration=self.state['log_w_0_total'], rate=1.).sample(
-                                                   (self.max_K - self.active_K,)))],   #self.max_K needs to be larger than self.active_K
+                                               torch.log(torch.squeeze(
+                                                   Gamma(concentration=torch.exp(self.state['log_w_0_total']) + 1e-10, rate=1.).sample(
+                                                   (self.max_K - self.active_K,))))],   #self.max_K needs to be larger than self.active_K
                                               dim=0)
 
     def update_w_0_proportion(self):
@@ -171,15 +173,42 @@ class BNPGraphModel(object):
 
     def sample(self):
         total_weight = self.state['pi'][1:self.active_K] * torch.exp(self.state['log_w_total'][1:self.active_K]) ** 2
-        print('total_weight ', total_weight )
-        total_number_edges = torch.maximum(torch.poisson(total_weight), torch.ones_like(total_weight))
-        print(total_number_edges)
-        """
+        total_number_edges = torch.poisson(total_weight)
+
         self.total_number_sampled_edges = int(torch.sum(total_number_edges))
-        print('total_number_edges', self.total_number_sampled_edges)
+        print('total_number_edges', self.total_number_sampled_edges, total_number_edges)
 
         edge_index = torch.cat(
-            [Categorical(logits=self.state['log_w'][i][1::]).sample([2, int(total_number_edges[i - 1].item())]) for i in
-             range(1, self.active_K)], dim=1)
-        return edge_index
+            [Categorical(logits=self.state['log_w'][i][1::]).sample([2, int(total_number_edges[i-1].item())]) for i in
+             range(1, self.active_K) if int(total_number_edges[i-1].item()) > 0], dim=1)
+        return self.to_symmetric(edge_index)
+
+    @staticmethod
+    def to_symmetric(edge_index):
         """
+        indices = edge_index._indices()
+        values = edge_index._values()
+
+        indices_0, indices_1 = indices[0], indices[1]
+
+        new_index = torch.cat([torch.unsqueeze(torch.cat([indices_0, indices_1], dim=0), dim=0),
+                               torch.unsqueeze(torch.cat([indices_1, indices_0], dim=0), dim=0)],
+                              dim=0)
+        new_values = torch.cat([values, values], dim=0)
+
+        return torch.sparse_coo_tensor(new_index, new_values, edge_index.size())
+        """
+        indices_0, indices_1 = edge_index[0], edge_index[1]
+        new_index = torch.cat([torch.unsqueeze(torch.cat([indices_0, indices_1], dim=0), dim=0),
+                               torch.unsqueeze(torch.cat([indices_1, indices_0], dim=0), dim=0)],
+                              dim=0)
+        return new_index
+
+    def log_likelihood(self):
+        log_prob = torch.sum(torch.log(self.state['pi'][1:self.active_K] + 1e-10) * self.state['n'][1:self.active_K])
+
+        log_prob += torch.sum((self.state['log_w'][1:self.active_K] - torch.unsqueeze(self.state['log_w_total'][1:self.active_K], 1)) * self.state['m'][1:self.active_K])
+
+        return log_prob
+
+
