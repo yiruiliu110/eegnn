@@ -19,8 +19,11 @@ class EEGCNModel(torch.nn.Module):
         with torch.no_grad():
             number_of_edges = int(edge_index.size()[1])
             number_of_nodes = int(torch.max(edge_index).item()) + 1
+            print(edge_index, torch.ones(number_of_edges),
+                                            [number_of_nodes, number_of_nodes])
             graph = torch.sparse_coo_tensor(edge_index, torch.ones(number_of_edges),
                                             [number_of_nodes, number_of_nodes])
+
 
             estimated_graph = BNPGraphModel(graph, alpha, tau, gamma, sigma, initial_K, max_K)
             estimated_graph.fit(training_epochs)
@@ -50,7 +53,7 @@ class EEGCNModel(torch.nn.Module):
         for i in range(self.number_layer - 1):
             x = self.layers[i](x, edge_index)
             x = F.relu(x)
-            x = F.dropout(x, training=self.training)
+            x = F.dropout(x,  training=self.training)
 
         x = self.layers[-1](x, edge_index)
         return F.log_softmax(x, dim=1)

@@ -20,7 +20,7 @@ class EEGCN(MessagePassing):
         super(EEGCN, self).__init__(**kwargs)
 
         self.global_layer = GlobalConv(in_channels, out_channels, global_edge_index, fixed_edge_weight,
-                 improved, cached, add_self_loops, normalize, bias,  **kwargs)
+                 improved, cached, False, normalize, bias,  **kwargs)
 
         fixed_in_channels = int(fixed_feature.size()[1])
 
