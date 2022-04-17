@@ -72,7 +72,7 @@ class BNPGraphModel(object):
             self.dlog_v = dlog_v
             self.dlog_u = dlog_u
 
-    def one_step(self):
+    def one_step(self, update_number_cluster=True):
         self.state['m'] = compute_m(self.state['z'], self.state['c'], self.max_K)
         self.state['n'] = compute_n(self.state['m'])
 
@@ -87,11 +87,11 @@ class BNPGraphModel(object):
         self.update_z()
         self.update_c()
 
-        self.adjust_cluster_number()
+        if update_number_cluster:
+            self.adjust_cluster_number()
 
     def fit(self, epochs):
         for i in range(epochs):
-            #print('maxxx', torch.max(self.state['log_w'][0]), torch.min(self.state['log_w'][0]))
             print('number of epoch', i)
             self.one_step()
             print('log likelihood', self.log_likelihood())
@@ -104,7 +104,6 @@ class BNPGraphModel(object):
     def update_pi(self):
         # the number of links in each clusters, first row corresponds to cluster 0.
         pi = sample_pi(self.state['n'][0:self.active_K], self.hyper_paras['gamma'])
-        #print('pi', pi)
         self.state['pi'] = torch.cat([pi, torch.zeros(self.max_K - self.active_K)], dim=0)
 
     def update_c(self):
@@ -210,5 +209,33 @@ class BNPGraphModel(object):
         log_prob += torch.sum((self.state['log_w'][1:self.active_K] - torch.unsqueeze(self.state['log_w_total'][1:self.active_K], 1)) * self.state['m'][1:self.active_K])
 
         return log_prob
+
+    def sample_conditonal(self):
+        logits = self.state['log_w'][0:self.active_K] + torch.unsqueeze(torch.log(self.state['pi'][0:self.active_K] + 1e-15), 1)
+        c = Categorical(logits=torch.transpose(logits[:, 0:-1], 0, 1)).sample()
+
+        dist_pras = torch.index_select(self.state['log_w'][0:self.active_K], 0, c)
+        nodes = Categorical(logits=dist_pras).sample()
+
+        outputs = torch.cat([torch.unsqueeze(torch.arange(0, self.node_number), 0), torch.unsqueeze(nodes, 0)], 0)
+        return outputs
+
+    def compute_mean(self, number_of_samples: int = 1000):
+        results_pi = []
+        results_log_w = []
+        for i in range(number_of_samples):
+            print('number of samples', i)
+            self.one_step(update_number_cluster=False)
+            print('log likelihood', self.log_likelihood())
+            results_pi.append(torch.unsqueeze(self.state['pi'][0:self.active_K], 0))
+            results_log_w.append(torch.unsqueeze(self.state['log_w'][0:self.active_K], 0))
+
+        mean_pi = torch.mean(torch.cat(results_pi, dim=0), dim=0)
+        mean_log_w = torch.mean(torch.cat(results_log_w, dim=0), dim=0)
+
+        return mean_pi, mean_log_w
+
+
+
 
 
