@@ -24,7 +24,6 @@ class EEGCNModel(torch.nn.Module):
             graph = torch.sparse_coo_tensor(edge_index, torch.ones(number_of_edges),
                                             [number_of_nodes, number_of_nodes])
 
-
             estimated_graph = BNPGraphModel(graph, alpha, tau, gamma, sigma, initial_K, max_K)
             estimated_graph.fit(training_epochs)
             mean_pi, mean_log_w = estimated_graph.compute_mean(sampling_number)

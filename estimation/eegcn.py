@@ -19,6 +19,8 @@ class EEGCN(MessagePassing):
                  bias: bool = True,  **kwargs):
         super(EEGCN, self).__init__(**kwargs)
 
+        self.plain_layer = GCNConv(in_channels, out_channels, improved, cached, add_self_loops, normalize, bias,  **kwargs)
+
         self.global_layer = GlobalConv(in_channels, out_channels, global_edge_index, fixed_edge_weight,
                  improved, cached, False, normalize, bias,  **kwargs)
 
@@ -27,16 +29,20 @@ class EEGCN(MessagePassing):
         self.local_layer = LocalConv(fixed_in_channels, out_channels, fixed_feature,
                  improved, cached, add_self_loops, normalize, bias,  **kwargs)
 
-        self.lin_total = Linear(2 * out_channels, out_channels, bias=False, weight_initializer='glorot')
+        self.lin_total = Linear(3 * out_channels, out_channels, bias=False, weight_initializer='glorot')
 
     def forward(self, x: Tensor, edge_index: Adj,
                 edge_weight: OptTensor = None) -> Tensor:
+        plain_out = self.plain_layer.forward(x, edge_index, edge_weight)
         global_out = self.global_layer.forward(x, edge_index, edge_weight)
         local_out = self.local_layer.forward(x, edge_index, edge_weight)
 
-        out = self.lin_total(torch.cat([global_out, local_out], dim=1))
+        out = torch.max(torch.cat([torch.unsqueeze(plain_out, 0),
+                                   torch.unsqueeze(global_out, 0),
+                                   torch.unsqueeze(local_out, 0)], dim=0), dim=0)
+        #self.lin_total(torch.cat([plain_out, global_out, local_out], dim=1))
 
-        return out
+        return out[0]
 
 
 class GlobalConv(GCNConv):
