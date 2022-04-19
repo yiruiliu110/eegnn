@@ -4,7 +4,7 @@ from torch_geometric.nn import GCNConv
 
 from torch_geometric.datasets import Planetoid
 
-dataset = Planetoid(root='/Users/yiruiliu/PycharmProjects/pythonProject/Cora', name='Cora')
+dataset = Planetoid(root='/Users/yiruiliu/PycharmProjects/pythonProject/CiteSeer', name='CiteSeer')
 
 
 class GCN(torch.nn.Module):

@@ -1,7 +1,7 @@
 import torch
 from torch.distributions import Gamma
 
-from estimation.sample_c import compute_c
+from estimation import compute_c
 
 
 i = [[0, 1, 1, 2],

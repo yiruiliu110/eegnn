@@ -1,6 +1,6 @@
 import torch
 
-from estimation.graph_model import BNPGraphModel
+from estimation import BNPGraphModel
 
 from torch_geometric.datasets import Planetoid
 

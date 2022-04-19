@@ -1,6 +1,6 @@
 import torch
 
-from estimation.compute_m import compute_m
+from estimation import compute_m
 
 i = [[0, 1, 1, 2],
     [2, 0, 2, 1]]

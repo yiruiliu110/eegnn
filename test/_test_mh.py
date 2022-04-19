@@ -3,7 +3,7 @@ test mh using a normal dist and multivariate normal dist, and two independent no
 """
 import torch
 import seaborn as sns
-from estimation.mh import MetropolisHastings
+from estimation import MetropolisHastings
 import matplotlib.pyplot as plt
 log_prob_fn = torch.distributions.normal.Normal(0., 1.).log_prob
 

@@ -1,9 +1,8 @@
 import torch
 
-from estimation.graph_model import BNPGraphModel
+from estimation import BNPGraphModel
 
 from ogb.graphproppred import PygGraphPropPredDataset
-from torch_geometric.loader import DataLoader
 
 # Download and process data at './dataset/ogbg_molhiv/'
 dataset = PygGraphPropPredDataset(name = 'ogbg-arxiv')

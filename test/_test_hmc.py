@@ -4,7 +4,7 @@ test hmc using  two independent normal
 import torch
 import seaborn as sns
 
-from estimation.hmc import HamiltonMonteCarlo
+from estimation import HamiltonMonteCarlo
 import matplotlib.pyplot as plt
 
 

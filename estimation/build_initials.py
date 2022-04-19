@@ -2,7 +2,6 @@
 This function builds up the initialization parameters.
 """
 import torch
-from torch.distributions import Gamma, Dirichlet
 
 from estimation.compute_m import compute_m
 

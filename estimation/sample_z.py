@@ -2,7 +2,6 @@
 this script contains the function to compute z from sparse v , pi and w
 """
 import torch
-from torch.distributions import Categorical
 
 from estimation.truncated_poisson import TruncatedPoisson
 

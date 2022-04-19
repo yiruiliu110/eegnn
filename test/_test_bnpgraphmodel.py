@@ -3,7 +3,7 @@ This script tests the init function of BNPGraphModel.
 """
 import torch
 
-from estimation.graph_model import BNPGraphModel
+from estimation import BNPGraphModel
 
 graph = [[0, 1, 1, 0],
         [1, 0, 1, 1],

@@ -1,7 +1,7 @@
 import torch
 from torch.distributions import Gamma, Dirichlet
 
-from estimation.sample_z import compute_z
+from estimation import compute_z
 
 i = [[0, 1, 1, 2],
     [2, 0, 2, 1]]

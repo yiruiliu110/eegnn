@@ -1,7 +1,7 @@
 import torch
 
-from estimation.generate_edge_index_and_weight import compute_dege_index_and_weight
-from estimation.graph_model import BNPGraphModel
+from estimation import compute_dege_index_and_weight
+from estimation import BNPGraphModel
 
 from torch_geometric.datasets import Planetoid
 
