@@ -75,7 +75,7 @@ class GCNIIdenseConv(MessagePassing):
     _cached_edge_index: Optional[Tuple[torch.Tensor, torch.Tensor]]
     # _cached_adj_t: Optional[SparseTensor]
 
-    def __init__(self, in_channels, out_channels, improved=False, cached=True,
+    def __init__(self, in_channels, out_channels, improved=False, cached=True, add_self_loops=True,
                  **kwargs):
 
         super(GCNIIdenseConv, self).__init__(aggr='add', **kwargs)
@@ -83,6 +83,7 @@ class GCNIIdenseConv(MessagePassing):
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.improved = improved
+        self.add_self_loops = add_self_loops
         self.cached = cached
         self.weight = Parameter(torch.Tensor(in_channels, out_channels))
 
@@ -94,15 +95,16 @@ class GCNIIdenseConv(MessagePassing):
         self.cached_num_edges = None
 
     @staticmethod
-    def norm(edge_index, num_nodes, edge_weight=None, improved=False,
+    def norm(edge_index, num_nodes, edge_weight=None, improved=False, add_self_loops=True,
              dtype=None):
         if edge_weight is None:
             edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
                                      device=edge_index.device)
 
         fill_value = 1 if not improved else 2
-        edge_index, edge_weight = add_remaining_self_loops(
-            edge_index, edge_weight, fill_value, num_nodes)
+        if add_self_loops:
+            edge_index, edge_weight = add_remaining_self_loops(
+                edge_index, edge_weight, fill_value, num_nodes)
 
         row, col = edge_index
         deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
@@ -126,7 +128,7 @@ class GCNIIdenseConv(MessagePassing):
         if not self.cached or self.cached_result is None:
             self.cached_num_edges = edge_index.size(1)
             edge_index, norm = self.norm(edge_index, x.size(0), edge_weight,
-                                         self.improved, x.dtype)
+                                         self.improved, self.add_self_loops, x.dtype)
             self.cached_result = edge_index, norm
 
         edge_index, norm = self.cached_result

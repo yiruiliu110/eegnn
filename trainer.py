@@ -38,8 +38,7 @@ class trainer(object):
         if args.compare_model:  # only compare model
             Model = getattr(importlib.import_module("models"), self.type_model)
             self.model = Model(args)
-        else:  # compare tricks combinations
-            self.model = EEGNN(args)
+
         self.model.to(self.device)
         self.optimizer = self.model.optimizer
 

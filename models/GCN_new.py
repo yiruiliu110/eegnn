@@ -3,6 +3,8 @@ import torch.nn.functional as F
 from torch import nn
 from torch_geometric.nn import GCNConv
 
+from models.initial_graph import initial_graph
+
 
 class pair_norm(torch.nn.Module):
     def __init__(self):
@@ -16,16 +18,16 @@ class pair_norm(torch.nn.Module):
         return x
 
 
-class GCN(nn.Module):
+class GCN_new(nn.Module):
     def __init__(self, args):
-        super(GCN, self).__init__()
+        super(GCN_new, self).__init__()
         for k, v in vars(args).items():
             setattr(self, k, v)
         self.cached = self.transductive = args.transductive
         self.layers_GCN = nn.ModuleList([])
         self.layers_bn = nn.ModuleList([])
 
-        self.layers_GCN.append(GCNConv(self.num_feats, self.dim_hidden, cached=self.cached))
+        self.layers_GCN.append(GCNConv(self.num_feats, self.dim_hidden, cached=self.cached, add_self_loops=False))
         if self.type_norm == 'batch':
             self.layers_bn.append(torch.nn.BatchNorm1d(self.dim_hidden))
         elif self.type_norm == 'pair':
@@ -49,13 +51,20 @@ class GCN(nn.Module):
         self.optimizer = torch.optim.Adam(self.parameters(),
                                           lr=self.lr, weight_decay=self.weight_decay)
 
+        self.virtual_graph=None
+
     def forward(self, x, edge_index):
 
         # implemented based on DeepGCN: https://github.com/LingxiaoShawn/PairNorm/blob/master/models.py
 
+        if self.virtual_graph is None:
+            self.virtual_graph = initial_graph(edge_index)
+            self.virtual_edge_index = self.virtual_graph._indices()
+            self.virtual_edge_weight = self.virtual_graph._values()
+
         for i in range(self.num_layers - 1):
             x = F.dropout(x, p=self.dropout, training=self.training)
-            x = self.layers_GCN[i](x, edge_index)
+            x = self.layers_GCN[i](x, edge_index=self.virtual_edge_index, edge_weight=self.virtual_edge_weight)
             if self.type_norm in ['batch', 'pair']:
                 x = self.layers_bn[i](x)
             x = F.relu(x)

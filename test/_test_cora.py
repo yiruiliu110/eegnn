@@ -1,11 +1,13 @@
 import torch
 
-from estimation import compute_dege_index_and_weight
-from estimation import BNPGraphModel
+
 
 from torch_geometric.datasets import Planetoid
 
-dataset = Planetoid(root='/Users/yiruiliu/PycharmProjects/pythonProject/Cora', name='Cora')
+from estimation.generate_edge_index_and_weight import compute_dege_index_and_weight
+from estimation.graph_model import BNPGraphModel
+
+dataset = Planetoid(root='/Users/yiruiliu/PycharmProjects/pythonProject/data/Cora', name='Cora')
 print(len(dataset))  # 1
 print(dataset.num_classes)  # 7
 print(dataset.num_features)  # 1433

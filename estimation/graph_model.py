@@ -34,7 +34,7 @@ class BNPGraphModel(object):
         graph_dense = graph.to_dense()
         print('is symmetric: (0 is yes)', torch.sum(graph_dense - torch.transpose(graph_dense, 0, 1)))
         print('is self connected: 0 is no', torch.sum(torch.diag(graph_dense, 0)))
-        # graph_dense.fill_diagonal_(1)
+        graph_dense.fill_diagonal_(1)
 
         dense_graph = torch.triu(graph_dense)
         self.graph_sparse = dense_graph.to_sparse(2)
@@ -87,14 +87,18 @@ class BNPGraphModel(object):
         self.update_z()
         self.update_c()
 
+        #print(torch.histogram(self.state['z']._values().to(torch.float32), bins=22, range=(-10.01, 10.99)))
+
         if update_number_cluster:
             self.adjust_cluster_number()
 
+        self.state['active_K'] =self.active_K
+
     def fit(self, epochs):
         for i in range(epochs):
-            print('number of epoch', i)
+            #print('number of epoch', i)
             self.one_step()
-            print('log likelihood', self.log_likelihood())
+            #print('log likelihood', self.log_likelihood())
 
     def update_w_proportion(self):
         log_w = sample_w_proportion(self.state['m'][1:self.active_K], self.state['log_w_0'],
@@ -122,7 +126,7 @@ class BNPGraphModel(object):
         )
         for item in ['log_w_total', 'log_w', 'pi', 'm', 'n']:
             self.state[item] = switch(self.state[item], remaining_indices, self.max_K)
-        print('active_K', self.active_K)
+        #print('active_K', self.active_K)
 
     def update_w_0_total(self):
         log_prob_fn = functools.partial(log_prob_wrt_w_0_total, log_w_k_total=self.state['log_w_total'][1:self.active_K],
@@ -175,7 +179,7 @@ class BNPGraphModel(object):
         total_number_edges = torch.poisson(total_weight)
 
         self.total_number_sampled_edges = int(torch.sum(total_number_edges))
-        print('total_number_edges', self.total_number_sampled_edges, total_number_edges)
+        #print('total_number_edges', self.total_number_sampled_edges, total_number_edges)
 
         edge_index = torch.cat(
             [Categorical(logits=self.state['log_w'][i][1::]).sample([2, int(total_number_edges[i-1].item())]) for i in
@@ -224,9 +228,9 @@ class BNPGraphModel(object):
         results_pi = []
         results_log_w = []
         for i in range(number_of_samples):
-            print('number of samples', i)
+            #print('number of samples', i)
             self.one_step(update_number_cluster=False)
-            print('log likelihood', self.log_likelihood())
+            #print('log likelihood', self.log_likelihood())
             results_pi.append(torch.unsqueeze(self.state['pi'][0:self.active_K], 0))
             results_log_w.append(torch.unsqueeze(self.state['log_w'][0:self.active_K], 0))
 
@@ -234,6 +238,18 @@ class BNPGraphModel(object):
         mean_log_w = torch.mean(torch.cat(results_log_w, dim=0), dim=0)
 
         return mean_pi, mean_log_w
+
+    def compute_mean_z(self, number_of_samples: int = 1000):
+        results_z = self.state['z']
+        for i in range(number_of_samples):
+            #print('number of samples', i)
+            self.one_step(update_number_cluster=False)
+            #print('log likelihood', self.log_likelihood())
+            results_z += self.state['z']
+
+        return results_z/number_of_samples
+
+
 
 
 
