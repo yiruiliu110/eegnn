@@ -28,7 +28,7 @@ class BaseOptions():
 
         parser.add_argument('--type_model', type=str, default="GCN",
                             choices=['GCN', 'GAT', 'SGC', 'GCNII', 'DAGNN', 'GPRGNN', 'APPNP', 'JKNet', 'DeeperGCN',
-                                     'GCNII_new', 'GCN_new', 'SGC_new'])
+                                     'GCNII_new', 'GCN_new', 'SGC_new', 'JKNet_new', 'APPNP_new', 'GAT_new'])
         parser.add_argument('--type_trick', type=str, default="None")
         parser.add_argument('--layer_agg', type=str, default='concat',
                             choices=['concat', 'maxpool', 'attention', 'mean'],
