@@ -24,13 +24,13 @@ class JKNet_new(torch.nn.Module):
         self.layers_GCN = torch.nn.ModuleList([])
         self.layers_bn = torch.nn.ModuleList([])
 
-        self.layers_GCN.append(GCNConv(self.num_feats, self.dim_hidden, cached=self.cached))
+        self.layers_GCN.append(GCNConv(self.num_feats, self.dim_hidden, cached=self.cached, add_self_loops=False))
         if self.type_norm == 'batch':
             self.layers_bn.append(torch.nn.BatchNorm1d(self.dim_hidden))
 
         for i in range(1, self.num_layers):
             self.layers_GCN.append(
-                GCNConv(self.dim_hidden, self.dim_hidden, cached=self.cached))
+                GCNConv(self.dim_hidden, self.dim_hidden, cached=self.cached, add_self_loops=False))
 
             if self.type_norm == 'batch':
                 self.layers_bn.append(torch.nn.BatchNorm1d(self.dim_hidden))
@@ -42,7 +42,7 @@ class JKNet_new(torch.nn.Module):
 
     def forward(self, x, edge_index):
         if self.virtual_graph is None:
-            self.virtual_graph = initial_graph(edge_index)
+            self.virtual_graph = initial_graph(edge_index, self.dataset)
             self.virtual_edge_index = self.virtual_graph._indices()
             self.virtual_edge_weight = self.virtual_graph._values()
 

@@ -72,33 +72,60 @@ class BNPGraphModel(object):
             self.dlog_v = dlog_v
             self.dlog_u = dlog_u
 
-    def one_step(self, update_number_cluster=True):
+    def one_step(self, update_number_cluster=True, print_likelihood=True):
         self.state['m'] = compute_m(self.state['z'], self.state['c'], self.max_K)
-        self.state['n'] = compute_n(self.state['m'])
+        #print('A', self.log_likelihood())
+
+        #self.state['n'] = compute_n(self.state['m'])
+        #print('A++', self.log_likelihood())
 
         self.update_w_0_total()
+        #self.state['m'] = compute_m(self.state['z'], self.state['c'], self.max_K)
+        #print('B', self.log_likelihood())
+
         self.update_w_0_proportion()
+        #self.state['m'] = compute_m(self.state['z'], self.state['c'], self.max_K)
+        #print('C', self.log_likelihood())
 
         self.update_w_total()
+        #self.state['m'] = compute_m(self.state['z'], self.state['c'], self.max_K)
+        #print('D', self.log_likelihood())
+
         self.update_w_proportion()
+        #self.state['m'] = compute_m(self.state['z'], self.state['c'], self.max_K)
+        #print('E', self.log_likelihood())
 
         self.update_pi()
+        #self.state['m'] = compute_m(self.state['z'], self.state['c'], self.max_K)
+        #print('F', self.log_likelihood())
 
         self.update_z()
+        #self.state['m'] = compute_m(self.state['z'], self.state['c'], self.max_K)
+        #print('G', self.log_likelihood())
+
         self.update_c()
+        #self.state['m'] = compute_m(self.state['z'], self.state['c'], self.max_K)
+        #print('H', self.log_likelihood())
 
         #print(torch.histogram(self.state['z']._values().to(torch.float32), bins=22, range=(-10.01, 10.99)))
 
         if update_number_cluster:
             self.adjust_cluster_number()
+            #self.state['m'] = compute_m(self.state['z'], self.state['c'], self.max_K)
+            #print('I', self.log_likelihood())
 
-        self.state['active_K'] =self.active_K
+        self.state['active_K'] = self.active_K
+
+        if print_likelihood:
+            print('active_K', self.active_K,
+                  'log likelihood', self.log_likelihood())
+
 
     def fit(self, epochs):
         for i in range(epochs):
-            #print('number of epoch', i)
+            print('number of epoch', i)
             self.one_step()
-            #print('log likelihood', self.log_likelihood())
+
 
     def update_w_proportion(self):
         log_w = sample_w_proportion(self.state['m'][1:self.active_K], self.state['log_w_0'],
@@ -107,6 +134,7 @@ class BNPGraphModel(object):
 
     def update_pi(self):
         # the number of links in each clusters, first row corresponds to cluster 0.
+
         pi = sample_pi(self.state['n'][0:self.active_K], self.hyper_paras['gamma'])
         self.state['pi'] = torch.cat([pi, torch.zeros(self.max_K - self.active_K)], dim=0)
 
@@ -239,12 +267,10 @@ class BNPGraphModel(object):
 
         return mean_pi, mean_log_w
 
-    def compute_mean_z(self, number_of_samples: int = 1000):
+    def compute_mean_z(self, number_of_samples: int = 1000, print_likelihood=False):
         results_z = self.state['z']
         for i in range(number_of_samples):
-            #print('number of samples', i)
-            self.one_step(update_number_cluster=False)
-            #print('log likelihood', self.log_likelihood())
+            self.one_step(update_number_cluster=False, print_likelihood=print_likelihood)
             results_z += self.state['z']
 
         return results_z/number_of_samples

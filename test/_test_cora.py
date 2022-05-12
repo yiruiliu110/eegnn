@@ -30,8 +30,8 @@ gamma = 1.0
 sigma = 0.5
 
 #### test 0
-model = BNPGraphModel(graph, alpha, tau, gamma, sigma, initial_K=100, max_K=150)
-print(model.state)
+model = BNPGraphModel(graph, alpha, tau, gamma, sigma, initial_K=10, max_K=100)
+#print(model.state)
 #### test 8
 model.fit(1000)
 
@@ -40,6 +40,6 @@ model.sample()
 model.sample_conditonal()
 
 mean_pi, mean_log_w = model.compute_mean(1000)
-print(mean_pi, mean_log_w)
+#print(mean_pi, mean_log_w)
 
 index, weight = compute_dege_index_and_weight(mean_pi, mean_log_w[:, 0:-1])

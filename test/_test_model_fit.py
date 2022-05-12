@@ -1,6 +1,6 @@
 import torch
 
-from estimation import BNPGraphModel
+from estimation.graph_model import BNPGraphModel
 
 graph = [[0, 1, 1, 0],
         [1, 0, 1, 1],
@@ -18,6 +18,6 @@ sigma = 0.5
 
 
 #### test 0
-model = BNPGraphModel(graph, alpha, tau, gamma, sigma, initial_K=3, max_K=5)
+model = BNPGraphModel(graph, alpha, tau, gamma, sigma, initial_K=3, max_K=100)
 #### test 8
-model.fit(1000)
+model.fit(10000)

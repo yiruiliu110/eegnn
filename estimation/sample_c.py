@@ -24,5 +24,5 @@ def compute_c(pi: torch.Tensor, log_w: torch.tensor, z: torch.sparse):
     c_tmp = Categorical(logits=torch.transpose(weight, 0, 1)).sample()
 
     c = torch.sparse_coo_tensor(indices, c_tmp, z.size())
-    print('c', c._values()[0:25])
+    #print('c', c._values()[0:25])
     return c

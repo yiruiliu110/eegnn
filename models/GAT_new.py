@@ -25,11 +25,11 @@ class GAT_new(torch.nn.Module):
 
         for _ in range(self.num_layers - 2):
             self.layers_GCN.append(
-                GATConv(self.dim_hidden, self.dim_hidden, bias=False, concat=False))
+                GATConv(self.dim_hidden, self.dim_hidden, bias=False, concat=False, add_self_loops=False))
             if self.type_norm == 'batch':
                 self.layers_bn.append(torch.nn.BatchNorm1d(self.dim_hidden))
 
-        self.layers_GCN.append(GATConv(self.dim_hidden, self.num_classes, bias=False, concat=False))
+        self.layers_GCN.append(GATConv(self.dim_hidden, self.num_classes, bias=False, concat=False, add_self_loops=False))
         self.optimizer = torch.optim.Adam(self.parameters(),
                                           lr=self.lr, weight_decay=self.weight_decay)
 
@@ -38,7 +38,7 @@ class GAT_new(torch.nn.Module):
     def forward(self, x, edge_index):
 
         if self.virtual_graph is None:
-            self.virtual_graph = initial_graph(edge_index)
+            self.virtual_graph = initial_graph(edge_index, self.dataset)
             self.virtual_edge_index = self.virtual_graph._indices()
             self.virtual_edge_weight = self.virtual_graph._values()
 

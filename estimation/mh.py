@@ -54,7 +54,7 @@ class MetropolisHastings:
             accepted = is_accepted(log_accept_ratio)
 
             accepted, _ = torch.broadcast_tensors(accepted, state)
-            print('accepted', torch.sum(accepted.to(torch.int32)))
+            #print('accepted', torch.sum(accepted.to(torch.int32)))
 
             new_state = torch.where(accepted, proposed_state, state)
 

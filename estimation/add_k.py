@@ -7,7 +7,7 @@ from estimation.stirling_number import stirling_number
 
 
 def build_injection(count, active_k, max_k, gamma):
-    print('count', count)
+    #print('count', count)
     with_sample_indices = count > 0
 
     remaining_indices = torch.squeeze(torch.cat([torch.tensor([True]), with_sample_indices[1::]], dim=0).nonzero())

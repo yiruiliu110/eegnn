@@ -58,7 +58,7 @@ class GCN_new(nn.Module):
         # implemented based on DeepGCN: https://github.com/LingxiaoShawn/PairNorm/blob/master/models.py
 
         if self.virtual_graph is None:
-            self.virtual_graph = initial_graph(edge_index)
+            self.virtual_graph = initial_graph(edge_index, self.dataset)
             self.virtual_edge_index = self.virtual_graph._indices()
             self.virtual_edge_weight = self.virtual_graph._values()
 

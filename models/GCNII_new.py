@@ -41,7 +41,7 @@ class GCNII_new(nn.Module):
     def forward(self, x, edge_index):
 
         if self.virtual_graph is None:
-            self.virtual_graph = initial_graph(edge_index)
+            self.virtual_graph = initial_graph(edge_index, self.dataset)
             self.virtual_edge_index = self.virtual_graph._indices()
             self.virtual_edge_weight = self.virtual_graph._values()
 

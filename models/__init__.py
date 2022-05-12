@@ -10,6 +10,9 @@ from models.SGC import SGC
 from models.GCNII_new import GCNII_new
 from models.GCN_new import GCN_new
 from models.SGC_new import SGC_new
+from models.JKNet_new import JKNet_new
+from models.APPNP_new import APPNP_new
+from models.GAT_new import GAT_new
 
 __all__ = ['APPNP', 'DAGNN', 'EdgeDrop', 'GCN', 'GAT', 'GCNII', 'GPRGNN', 'JKNet', 'SGC',
            'GCNII_new', 'GCN_new', 'SGC_new', 'JKNet_new', 'APPNP_new', 'GAT_new']

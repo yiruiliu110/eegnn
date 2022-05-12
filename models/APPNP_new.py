@@ -61,7 +61,7 @@ class APPNP_new(MessagePassing):
                 edge_weight: OptTensor = None) -> Tensor:
         """"""
         if self.virtual_graph is None:
-            self.virtual_graph = initial_graph(edge_index)
+            self.virtual_graph = initial_graph(edge_index, self.dataset)
             self.virtual_edge_index = self.virtual_graph._indices()
             self.virtual_edge_weight = self.virtual_graph._values()
 
@@ -72,7 +72,7 @@ class APPNP_new(MessagePassing):
                 if cache is None:
                     edge_index, edge_weight = gcn_norm(  # yapf: disable
                         edge_index, edge_weight, x.size(0), False,
-                        self.add_self_loops, dtype=x.dtype)
+                        add_self_loops=False, dtype=x.dtype)
                     if self.cached:
                         self._cached_edge_index = (edge_index, edge_weight)
                 else:
@@ -83,7 +83,7 @@ class APPNP_new(MessagePassing):
                 if cache is None:
                     edge_index = gcn_norm(  # yapf: disable
                         edge_index, edge_weight, x.size(0), False,
-                        self.add_self_loops, dtype=x.dtype)
+                        add_self_loops=False, dtype=x.dtype)
                     if self.cached:
                         self._cached_adj_t = edge_index
                 else:
