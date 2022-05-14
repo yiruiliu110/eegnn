@@ -127,4 +127,4 @@ def main_hpo(data_name='Cora',
 
 
 if __name__ == "__main__":
-    main_hpo(data_name='Citeseer')
+    main_hpo(data_name='Pubmed', max_K=200)
