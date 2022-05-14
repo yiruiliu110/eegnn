@@ -15,7 +15,7 @@ def initial_graph(edge_index, data_name: str = 'TEXAS'):
         graph = torch.sparse_coo_tensor(edge_index, torch.ones(number_of_edges),
                                         [number_of_nodes, number_of_nodes])
 
-        estimated_graph = BNPGraphModel(graph, alpha=1.0, tau=1.0, gamma=5.0, sigma=0.5, initial_K=10, max_K=100)
+        estimated_graph = BNPGraphModel(graph, alpha=10.0, tau=1.0, gamma=5.0, sigma=0.5, initial_K=10, max_K=100)
 
     try:
         with open(os.path.join('data', data_name, "trained_model_state_" + data_name), "rb") as output_file:

@@ -17,7 +17,7 @@ class TruncatedPoisson(Poisson):
     def sample(self, limit=10):
 
         with torch.no_grad():
-            weights = self.log_prob(torch.unsqueeze(torch.range(1, limit), dim=1))  # limit X shape_of_rates
+            weights = self.log_prob(torch.unsqueeze(torch.arange(1, limit+1), dim=1))  # limit X shape_of_rates
             categorial_distribution = Categorical(logits=torch.transpose(weights, dim0=0, dim1=1))
             sample = categorial_distribution.sample()
             return sample + 1

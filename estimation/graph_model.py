@@ -74,45 +74,16 @@ class BNPGraphModel(object):
 
     def one_step(self, update_number_cluster=True, print_likelihood=True):
         self.state['m'] = compute_m(self.state['z'], self.state['c'], self.max_K)
-        #print('A', self.log_likelihood())
-
-        #self.state['n'] = compute_n(self.state['m'])
-        #print('A++', self.log_likelihood())
-
         self.update_w_0_total()
-        #self.state['m'] = compute_m(self.state['z'], self.state['c'], self.max_K)
-        #print('B', self.log_likelihood())
-
         self.update_w_0_proportion()
-        #self.state['m'] = compute_m(self.state['z'], self.state['c'], self.max_K)
-        #print('C', self.log_likelihood())
-
         self.update_w_total()
-        #self.state['m'] = compute_m(self.state['z'], self.state['c'], self.max_K)
-        #print('D', self.log_likelihood())
-
         self.update_w_proportion()
-        #self.state['m'] = compute_m(self.state['z'], self.state['c'], self.max_K)
-        #print('E', self.log_likelihood())
-
         self.update_pi()
-        #self.state['m'] = compute_m(self.state['z'], self.state['c'], self.max_K)
-        #print('F', self.log_likelihood())
-
         self.update_z()
-        #self.state['m'] = compute_m(self.state['z'], self.state['c'], self.max_K)
-        #print('G', self.log_likelihood())
-
         self.update_c()
-        #self.state['m'] = compute_m(self.state['z'], self.state['c'], self.max_K)
-        #print('H', self.log_likelihood())
-
-        #print(torch.histogram(self.state['z']._values().to(torch.float32), bins=22, range=(-10.01, 10.99)))
 
         if update_number_cluster:
             self.adjust_cluster_number()
-            #self.state['m'] = compute_m(self.state['z'], self.state['c'], self.max_K)
-            #print('I', self.log_likelihood())
 
         self.state['active_K'] = self.active_K
 
@@ -120,11 +91,10 @@ class BNPGraphModel(object):
             print('active_K', self.active_K,
                   'log likelihood', self.log_likelihood())
 
-
-    def fit(self, epochs):
+    def fit(self, epochs, print_likelihood=True):
         for i in range(epochs):
             print('number of epoch', i)
-            self.one_step()
+            self.one_step(print_likelihood=print_likelihood)
 
 
     def update_w_proportion(self):
