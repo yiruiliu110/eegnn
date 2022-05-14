@@ -7,24 +7,19 @@ from ray import tune
 
 from ray.tune.schedulers import PopulationBasedTraining
 from ray.tune.trial import ExportFormat
-from torch import optim
 from torch_geometric.datasets import Planetoid, WebKB
-
-from Dataloader import load_data
-import random
-
 from estimation.graph_model import BNPGraphModel
 
 
 def main_hpo(data_name='Cora',
-             initial_K: int = 50,
+             initial_K: int = 10,
              max_K: int = 100):
 
     # data
     path = os.path.join(os.path.dirname(os.path.realpath(__file__)), data_name)
     print(path)
     if data_name in ["Cora", "Citeseer", "Pubmed"]:
-        data = Planetoid(path, data_name)
+        data = Planetoid(root=path, name=data_name)
     elif data_name in ["TEXAS", "WISCONSIN", "CORNELL"]:
         data = WebKB(path, data_name)
 
@@ -38,7 +33,7 @@ def main_hpo(data_name='Cora',
         # Create our data loaders, model, and optmizer.
         step = 0
 
-        model = BNPGraphModel(graph, alpha=config['alpha'], tau=1.0, gamma=config['gamma'], sigma=0.5, initial_K=initial_K, max_K=max_K)
+        model = BNPGraphModel(graph, alpha=config['alpha'], tau=1.0, gamma=config['gamma'], sigma=0.5, initial_K=initial_K, max_K=max_K, if_print=False)
 
         # If checkpoint_dir is not None, then we are resuming from a checkpoint.
         # Load model state and iteration step from checkpoint.
@@ -53,9 +48,9 @@ def main_hpo(data_name='Cora',
             step = checkpoint["step"]
 
         while True:
-            model.fit(1000, print_likelihood=False)
-            log_likelihood = model.log_likelihood()
-            if step % 5 == 0:
+            model.fit(1, print_likelihood=False)
+            log_likelihood = float(model.log_likelihood())
+            if step % 1 == 0:
                 # Every 5 steps, checkpoint our current state.
                 # First get the checkpoint directory from tune.
                 with tune.checkpoint_dir(step=step) as checkpoint_dir:
@@ -63,6 +58,7 @@ def main_hpo(data_name='Cora',
                     path = os.path.join(checkpoint_dir, "checkpoint")
                     # Save state to checkpoint file.
                     # No need to save optimizer for SGD.
+                    print(model.state['active_K'])
                     torch.save(
                         {
                             "step": step,
@@ -79,9 +75,9 @@ def main_hpo(data_name='Cora',
         perturbation_interval=5,
         hyperparam_mutations={
             # distribution for resampling
-            "alpha": lambda: np.random.uniform(1.0, 1000.0),
+            "alpha": lambda: np.random.uniform(1.0, 100.0),
             # allow perturbations within this set of categorical values
-            "gamma": lambda: np.random.uniform(1.0, 100.0),
+            "gamma": lambda: np.random.uniform(1.0, 10.0),
         },
     )
 
@@ -90,7 +86,7 @@ def main_hpo(data_name='Cora',
             self.should_stop = False
 
         def __call__(self, trial_id, result):
-            max_iter = 100
+            max_iter = 10000
             return result["training_iteration"] >= max_iter
 
         def stop_all(self):
@@ -108,7 +104,7 @@ def main_hpo(data_name='Cora',
         verbose=1,
         stop=stopper,
         export_formats=[ExportFormat.MODEL],
-        checkpoint_score_attr="mean_accuracy",
+        checkpoint_score_attr="log_likelihood",
         keep_checkpoints_num=4,
         num_samples=4,
         config={
@@ -131,4 +127,4 @@ def main_hpo(data_name='Cora',
 
 
 if __name__ == "__main__":
-    main_hpo(data_name='Cora')
+    main_hpo(data_name='Citeseer')

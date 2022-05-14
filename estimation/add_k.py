@@ -66,7 +66,7 @@ def switch(inputs, remaining_indices, max_k):
 
 
 def generating_deleting_indices(max_k, remaining_indices):
-    deleting_indices = torch.tensor([int(item) for item in torch.range(0, max_k-1) if item not in remaining_indices])
+    deleting_indices = torch.tensor([int(item) for item in torch.arange(0, max_k) if item not in remaining_indices])
     return deleting_indices
 
 

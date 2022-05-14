@@ -28,12 +28,14 @@ class BNPGraphModel(object):
                  sigma: float = 0.0,
                  initial_K: int = 20,
                  max_K: int = 100,
-                 cmr: str = 'gamma'):
+                 cmr: str = 'gamma',
+                 if_print = True):
 
         # B convention, we just need to infer upper triangle's n_ij
         graph_dense = graph.to_dense()
-        print('is symmetric: (0 is yes)', torch.sum(graph_dense - torch.transpose(graph_dense, 0, 1)))
-        print('is self connected: 0 is no', torch.sum(torch.diag(graph_dense, 0)))
+        if if_print:
+            print('is symmetric: (0 is yes)', torch.sum(graph_dense - torch.transpose(graph_dense, 0, 1)))
+            print('is self connected: 0 is no', torch.sum(torch.diag(graph_dense, 0)))
         graph_dense.fill_diagonal_(1)
 
         dense_graph = torch.triu(graph_dense)
@@ -41,7 +43,8 @@ class BNPGraphModel(object):
 
         self.node_number = dense_graph.shape[0]
         self.edge_number = torch.sum(dense_graph).to(int)
-        print(f"Num Nodes : {self.node_number} \t Num Edges : {self.edge_number}")
+        if if_print:
+            print(f"Num Nodes : {self.node_number} \t Num Edges : {self.edge_number}")
 
         # number of clusters
         self.max_K = max_K
@@ -93,7 +96,8 @@ class BNPGraphModel(object):
 
     def fit(self, epochs, print_likelihood=True):
         for i in range(epochs):
-            print('number of epoch', i)
+            if print_likelihood:
+                print('number of epoch', i)
             self.one_step(print_likelihood=print_likelihood)
 
 
