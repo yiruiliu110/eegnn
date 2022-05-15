@@ -121,7 +121,7 @@ def main_hpo(data_name='Cora',
         ax = d.plot("training_iteration", "log_likelihood", ax=ax, legend=False)
 
     plt.xlabel("iterations")
-    plt.ylabel("Test Accuracy")
+    plt.ylabel("log likelihood")
     plt.show()
     print('best config:', analysis.get_best_config("log_likelihood"))
 
