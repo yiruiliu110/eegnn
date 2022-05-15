@@ -16,7 +16,7 @@ def main(args):
         args = overwrite_with_yaml(args, args.type_model, args.dataset)
     print_args(args)
     for seed in range(args.N_exp):
-        seed=0 
+        seed=0
         print(f'seed (which_run) = <{seed}>')
         args.random_seed = seed
         set_seed(args)
