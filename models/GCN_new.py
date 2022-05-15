@@ -35,7 +35,7 @@ class GCN_new(nn.Module):
 
         for _ in range(self.num_layers - 2):
             self.layers_GCN.append(
-                GCNConv(self.dim_hidden, self.dim_hidden, cached=self.cached))
+                GCNConv(self.dim_hidden, self.dim_hidden, cached=self.cached, add_self_loops=False))
 
             if self.type_norm == 'batch':
                 self.layers_bn.append(torch.nn.BatchNorm1d(self.dim_hidden))

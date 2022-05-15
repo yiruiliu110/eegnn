@@ -65,6 +65,9 @@ class APPNP_new(MessagePassing):
             self.virtual_edge_index = self.virtual_graph._indices()
             self.virtual_edge_weight = self.virtual_graph._values()
 
+        edge_index = self.virtual_edge_index
+        edge_weight = self.virtual_edge_weight
+
         # implemented based on: https://github.com/klicperajo/ppnp/blob/master/ppnp/pytorch/ppnp.py
         if self.normalize:
             if isinstance(edge_index, Tensor):
@@ -100,6 +103,7 @@ class APPNP_new(MessagePassing):
         x = h
 
         for k in range(self.num_layers):
+            """
             if self.dropout > 0 and self.training:
                 if isinstance(edge_index, Tensor):
                     assert edge_weight is not None
@@ -109,6 +113,7 @@ class APPNP_new(MessagePassing):
                     assert value is not None
                     value = F.dropout(value, p=self.dropout, training=self.training)
                     edge_index = edge_index.set_value(value, layout='coo')
+            """
 
             # propagate_type: (x: Tensor, edge_weight: OptTensor)
             x = self.propagate(edge_index, x=x, edge_weight=edge_weight,

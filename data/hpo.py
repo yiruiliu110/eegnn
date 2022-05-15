@@ -7,7 +7,7 @@ from ray import tune
 
 from ray.tune.schedulers import PopulationBasedTraining
 from ray.tune.trial import ExportFormat
-from torch_geometric.datasets import Planetoid, WebKB
+from torch_geometric.datasets import Planetoid, WebKB, Actor
 from estimation.graph_model import BNPGraphModel
 
 
@@ -22,7 +22,8 @@ def main_hpo(data_name='Cora',
         data = Planetoid(root=path, name=data_name)
     elif data_name in ["TEXAS", "WISCONSIN", "CORNELL"]:
         data = WebKB(path, data_name)
-
+    elif data_name in ["ACTOR"]:
+        data = Actor(path)
     data = data[0]
 
     number_of_nodes = data.x.size()[0]
@@ -127,4 +128,4 @@ def main_hpo(data_name='Cora',
 
 
 if __name__ == "__main__":
-    main_hpo(data_name='Pubmed', max_K=200)
+    main_hpo(data_name='ACTOR', max_K=150)

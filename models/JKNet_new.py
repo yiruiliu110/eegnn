@@ -50,7 +50,7 @@ class JKNet_new(torch.nn.Module):
 
         layer_outputs = []
         for i in range(self.num_layers):
-            x = self.layers_GCN[i](x, edge_index)
+            x = self.layers_GCN[i](x, edge_index=self.virtual_edge_index, edge_weight=self.virtual_edge_weight)
             if self.type_norm == 'batch':
                 x = self.layers_bn[i](x)
             x = F.relu(x)

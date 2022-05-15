@@ -8,9 +8,10 @@ from matplotlib import pyplot as plt
 
 from estimation.generate_edge_index_and_weight import compute_dege_index_and_weight
 from estimation.graph_model import BNPGraphModel
+from models.plot_hist import plot_hist
 
 
-def initial_graph(edge_index, data_name: str = 'TEXAS'):
+def initial_graph(edge_index, data_name: str = 'TEXAS', print_hist=False):
     with torch.no_grad():
         number_of_edges = int(edge_index.size()[1])
         number_of_nodes = int(torch.max(edge_index).item()) + 1
@@ -25,7 +26,7 @@ def initial_graph(edge_index, data_name: str = 'TEXAS'):
         alpha = config['alpha']
         gamma = config['gamma']
 
-        estimated_graph = BNPGraphModel(graph, alpha=alpha, tau=1.0, gamma=gamma, sigma=0.5, initial_K=10, max_K=200)
+        estimated_graph = BNPGraphModel(graph, alpha=alpha, tau=1.0, gamma=gamma, sigma=0.5, initial_K=10, max_K=150)
 
     try:
         with open(os.path.join('data', data_name, "trained_model_state_" + data_name), "rb") as output_file:
@@ -41,17 +42,6 @@ def initial_graph(edge_index, data_name: str = 'TEXAS'):
             result_log_likelihood.append(float(estimated_graph.log_likelihood()))
             results_active_K.append(estimated_graph.state['active_K'])
 
-        z = estimated_graph.state['z']._values().tolist()
-        z = [item for item in z if item > 1]
-        z = np.array(z)
-        bins = np.arange(1, z.max() + 1.5) - 0.5
-        fig, ax = plt.subplots()
-        ax.hist(z, bins=bins)
-        ax.set_xticks(list(range(1, int(z.max())+1)))
-        #ax.set_yticks(list(range(0, int(np.histogram(z)[0].max()) + 1)))
-        fig.savefig(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'figs', data_name + '_hist'))
-        plt.show()
-
         fig, ax = plt.subplots()
         ax.plot(list(range(1, training_epochs+1)), result_log_likelihood)
         ax.set_xlabel("iterations")
@@ -66,14 +56,13 @@ def initial_graph(edge_index, data_name: str = 'TEXAS'):
         fig.savefig(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'figs', data_name + '_active_k'))
         plt.show()
 
-
-
-
-
         with open(os.path.join('data', data_name, "trained_model_state_" + data_name), "wb") as output_file:
             pickle.dump(estimated_graph.state, output_file)
 
-    virtual_graph = estimated_graph.compute_mean_z(100)
+    if print_hist:
+        plot_hist(estimated_graph, data_name)
+
+    virtual_graph = estimated_graph.compute_mean_z(1000)
 
     virtual_graph = virtual_graph.to_dense()
     virtual_graph = (virtual_graph + torch.transpose(virtual_graph, 0, 1)) / 2
