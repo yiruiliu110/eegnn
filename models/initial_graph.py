@@ -33,11 +33,11 @@ def initial_graph(edge_index, data_name: str = 'TEXAS'):
             estimated_graph.active_K = estimated_graph.state['active_K']
 
     except:
-        training_epochs = 50000
+        training_epochs = 100
         result_log_likelihood = []
         results_active_K = []
         for i in range(training_epochs):
-            estimated_graph.one_step(print_likelihood=False)
+            estimated_graph.one_step(print_likelihood=True)
             result_log_likelihood.append(float(estimated_graph.log_likelihood()))
             results_active_K.append(estimated_graph.state['active_K'])
 
