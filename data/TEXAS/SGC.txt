@@ -1,0 +1,119 @@
+! python main.py --compare_model=1 --cuda_num=0 --N_exp=1 --type_model=SGC --dataset=TEXAS
+
++-------------------+---------------------+
+| Parameter         | Value               |
++-------------------+---------------------+
+| N_exp             | 1                   |
++-------------------+---------------------+
+| activation        | relu                |
++-------------------+---------------------+
+| adj_dropout       | 0.500               |
++-------------------+---------------------+
+| alpha             | 0.100               |
++-------------------+---------------------+
+| compare_model     | 1                   |
++-------------------+---------------------+
+| cuda              | 1                   |
++-------------------+---------------------+
+| cuda_num          | 0                   |
++-------------------+---------------------+
+| dataset           | TEXAS               |
++-------------------+---------------------+
+| dim_hidden        | 64                  |
++-------------------+---------------------+
+| dropout           | 0.500               |
++-------------------+---------------------+
+| edge_dropout      | 0.200               |
++-------------------+---------------------+
+| embedding_dropout | 0.600               |
++-------------------+---------------------+
+| epochs            | 1000                |
++-------------------+---------------------+
+| graph_dropout     | 0.200               |
++-------------------+---------------------+
+| has_residual_MLP  | 0                   |
++-------------------+---------------------+
+| lamda             | 0.500               |
++-------------------+---------------------+
+| layer_agg         | concat              |
++-------------------+---------------------+
+| layerwise_dropout | 0                   |
++-------------------+---------------------+
+| log_file_name     | time_and_memory.log |
++-------------------+---------------------+
+| lr                | 0.010               |
++-------------------+---------------------+
+| multi_label       | 0                   |
++-------------------+---------------------+
+| node_norm_type    | n                   |
++-------------------+---------------------+
+| num_classes       | 5                   |
++-------------------+---------------------+
+| num_feats         | 1703                |
++-------------------+---------------------+
+| num_groups        | None                |
++-------------------+---------------------+
+| num_layers        | 64                  |
++-------------------+---------------------+
+| patience          | 100                 |
++-------------------+---------------------+
+| random_seed       | 100                 |
++-------------------+---------------------+
+| res_alpha         | 0.900               |
++-------------------+---------------------+
+| resume            | 0                   |
++-------------------+---------------------+
+| skip_weight       | None                |
++-------------------+---------------------+
+| transductive      | 1                   |
++-------------------+---------------------+
+| type_model        | SGC                 |
++-------------------+---------------------+
+| type_norm         | None                |
++-------------------+---------------------+
+| type_trick        | None                |
++-------------------+---------------------+
+| weight_decay      | 0.000               |
++-------------------+---------------------+
+| weight_decay1     | 0.010               |
++-------------------+---------------------+
+| weight_decay2     | 0.001               |
++-------------------+---------------------+
+seed (which_run) = <0>
+Epoch: 000, Train loss: 1.6082, Val loss: 1.5984, Test acc: 0.6486
+Epoch: 001, Train loss: 1.5968, Val loss: 1.5903, Test acc: 0.6486
+Epoch: 020, Train loss: 1.4188, Val loss: 1.4612, Test acc: 0.6486
+Epoch: 040, Train loss: 1.2985, Val loss: 1.3741, Test acc: 0.6486
+Epoch: 060, Train loss: 1.2298, Val loss: 1.3285, Test acc: 0.6486
+Epoch: 080, Train loss: 1.1760, Val loss: 1.3063, Test acc: 0.6486
+Epoch: 100, Train loss: 1.1610, Val loss: 1.2930, Test acc: 0.6216
+Epoch: 120, Train loss: 1.1428, Val loss: 1.2848, Test acc: 0.6216
+Epoch: 140, Train loss: 1.1214, Val loss: 1.2771, Test acc: 0.6216
+Epoch: 160, Train loss: 1.1272, Val loss: 1.2707, Test acc: 0.6216
+Epoch: 180, Train loss: 1.0690, Val loss: 1.2651, Test acc: 0.6216
+Epoch: 200, Train loss: 1.0875, Val loss: 1.2615, Test acc: 0.6216
+Epoch: 220, Train loss: 1.0688, Val loss: 1.2598, Test acc: 0.6216
+Epoch: 240, Train loss: 1.0510, Val loss: 1.2593, Test acc: 0.6216
+Epoch: 260, Train loss: 1.0878, Val loss: 1.2578, Test acc: 0.6216
+Epoch: 280, Train loss: 1.0669, Val loss: 1.2553, Test acc: 0.6216
+Epoch: 300, Train loss: 1.0757, Val loss: 1.2540, Test acc: 0.6216
+Epoch: 320, Train loss: 1.0632, Val loss: 1.2535, Test acc: 0.6216
+Epoch: 340, Train loss: 1.0628, Val loss: 1.2516, Test acc: 0.6216
+Epoch: 360, Train loss: 1.0671, Val loss: 1.2508, Test acc: 0.6216
+Epoch: 380, Train loss: 1.0567, Val loss: 1.2514, Test acc: 0.6216
+Epoch: 400, Train loss: 1.0443, Val loss: 1.2506, Test acc: 0.6216
+Epoch: 420, Train loss: 1.0502, Val loss: 1.2525, Test acc: 0.6216
+Epoch: 440, Train loss: 1.0477, Val loss: 1.2522, Test acc: 0.6216
+Epoch: 460, Train loss: 1.0295, Val loss: 1.2507, Test acc: 0.6216
+Epoch: 480, Train loss: 1.0459, Val loss: 1.2504, Test acc: 0.6216
+Epoch: 500, Train loss: 1.0505, Val loss: 1.2474, Test acc: 0.6216
+Epoch: 520, Train loss: 1.0536, Val loss: 1.2485, Test acc: 0.6216
+Epoch: 540, Train loss: 1.0240, Val loss: 1.2502, Test acc: 0.6216
+Epoch: 560, Train loss: 1.0276, Val loss: 1.2510, Test acc: 0.6216
+Epoch: 580, Train loss: 1.0596, Val loss: 1.2489, Test acc: 0.6216
+Epoch: 600, Train loss: 1.0256, Val loss: 1.2485, Test acc: 0.6216
+train_loss: 1.0305, val_acc: 0.6102, test_acc:0.6216
+mean and std of test acc: 0.6216±0.0000
+final mean and std of test acc with <1> runs: 0.6216±0.0000
+
+
