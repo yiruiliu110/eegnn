@@ -62,7 +62,7 @@ def initial_graph(edge_index, data_name: str = 'TEXAS', print_hist=False):
     if print_hist:
         plot_hist(estimated_graph, data_name)
 
-    virtual_graph = estimated_graph.compute_mean_z(1000)
+    virtual_graph = estimated_graph.compute_mean_z(100)
 
     virtual_graph = virtual_graph.to_dense()
     virtual_graph = (virtual_graph + torch.transpose(virtual_graph, 0, 1)) / 2
