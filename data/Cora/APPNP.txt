@@ -1,0 +1,117 @@
+! python main.py --compare_model=1 --cuda_num=0 --N_exp=1 --type_model=APPNP --dataset=Cora
+
++-------------------+---------------------+
+| Parameter         | Value               |
++-------------------+---------------------+
+| N_exp             | 1                   |
++-------------------+---------------------+
+| activation        | relu                |
++-------------------+---------------------+
+| adj_dropout       | 0.500               |
++-------------------+---------------------+
+| alpha             | 0.100               |
++-------------------+---------------------+
+| compare_model     | 1                   |
++-------------------+---------------------+
+| cuda              | 1                   |
++-------------------+---------------------+
+| cuda_num          | 0                   |
++-------------------+---------------------+
+| dataset           | Cora                |
++-------------------+---------------------+
+| dim_hidden        | 64                  |
++-------------------+---------------------+
+| dropout           | 0.600               |
++-------------------+---------------------+
+| edge_dropout      | 0.200               |
++-------------------+---------------------+
+| embedding_dropout | 0.600               |
++-------------------+---------------------+
+| epochs            | 1000                |
++-------------------+---------------------+
+| graph_dropout     | 0.200               |
++-------------------+---------------------+
+| has_residual_MLP  | 0                   |
++-------------------+---------------------+
+| lamda             | 0.500               |
++-------------------+---------------------+
+| layer_agg         | concat              |
++-------------------+---------------------+
+| layerwise_dropout | 0                   |
++-------------------+---------------------+
+| log_file_name     | time_and_memory.log |
++-------------------+---------------------+
+| lr                | 0.010               |
++-------------------+---------------------+
+| multi_label       | 0                   |
++-------------------+---------------------+
+| node_norm_type    | n                   |
++-------------------+---------------------+
+| num_classes       | 7                   |
++-------------------+---------------------+
+| num_feats         | 1433                |
++-------------------+---------------------+
+| num_groups        | None                |
++-------------------+---------------------+
+| num_layers        | 64                  |
++-------------------+---------------------+
+| patience          | 100                 |
++-------------------+---------------------+
+| random_seed       | 100                 |
++-------------------+---------------------+
+| resume            | 0                   |
++-------------------+---------------------+
+| skip_weight       | None                |
++-------------------+---------------------+
+| transductive      | 1                   |
++-------------------+---------------------+
+| type_model        | GCNII               |
++-------------------+---------------------+
+| type_norm         | None                |
++-------------------+---------------------+
+| type_trick        | None                |
++-------------------+---------------------+
+| weight_decay      | 0.001               |
++-------------------+---------------------+
+| weight_decay1     | 0.010               |
++-------------------+---------------------+
+| weight_decay2     | 0.001               |
++-------------------+---------------------+
+seed (which_run) = <0>
+Epoch: 000, Train loss: 1.9493, Val loss: 1.9377, Test acc: 0.0910
+Epoch: 001, Train loss: 1.9451, Val loss: 1.9379, Test acc: 0.0910
+Epoch: 020, Train loss: 1.8688, Val loss: 1.8860, Test acc: 0.7390
+Epoch: 040, Train loss: 1.7347, Val loss: 1.7641, Test acc: 0.7870
+Epoch: 060, Train loss: 1.5904, Val loss: 1.5874, Test acc: 0.8090
+Epoch: 080, Train loss: 1.3795, Val loss: 1.4316, Test acc: 0.8200
+Epoch: 100, Train loss: 1.2048, Val loss: 1.3369, Test acc: 0.8130
+Epoch: 120, Train loss: 1.1054, Val loss: 1.2373, Test acc: 0.8270
+Epoch: 140, Train loss: 1.1252, Val loss: 1.1650, Test acc: 0.8300
+Epoch: 160, Train loss: 1.0632, Val loss: 1.1104, Test acc: 0.8330
+Epoch: 180, Train loss: 0.9737, Val loss: 1.0578, Test acc: 0.8520
+Epoch: 200, Train loss: 0.9477, Val loss: 1.0455, Test acc: 0.8400
+Epoch: 220, Train loss: 0.8809, Val loss: 1.0213, Test acc: 0.8370
+Epoch: 240, Train loss: 0.8763, Val loss: 0.9892, Test acc: 0.8520
+Epoch: 260, Train loss: 0.9419, Val loss: 0.9430, Test acc: 0.8420
+Epoch: 280, Train loss: 1.0214, Val loss: 0.9579, Test acc: 0.8470
+Epoch: 300, Train loss: 0.8896, Val loss: 0.9323, Test acc: 0.8420
+Epoch: 320, Train loss: 0.9143, Val loss: 0.9456, Test acc: 0.8480
+Epoch: 340, Train loss: 0.8083, Val loss: 0.9155, Test acc: 0.8550
+Epoch: 360, Train loss: 0.8724, Val loss: 0.9025, Test acc: 0.8520
+Epoch: 380, Train loss: 0.8750, Val loss: 0.8964, Test acc: 0.8440
+Epoch: 400, Train loss: 0.8890, Val loss: 0.9114, Test acc: 0.8440
+Epoch: 420, Train loss: 0.7874, Val loss: 0.8960, Test acc: 0.8470
+Epoch: 440, Train loss: 0.8027, Val loss: 0.8889, Test acc: 0.8500
+Epoch: 460, Train loss: 0.9926, Val loss: 0.8735, Test acc: 0.8480
+Epoch: 480, Train loss: 0.7837, Val loss: 0.8783, Test acc: 0.8420
+Epoch: 500, Train loss: 0.9567, Val loss: 0.8791, Test acc: 0.8530
+Epoch: 520, Train loss: 0.7521, Val loss: 0.8612, Test acc: 0.8470
+Epoch: 540, Train loss: 1.5896, Val loss: 0.8675, Test acc: 0.8440
+Epoch: 560, Train loss: 0.8759, Val loss: 0.8606, Test acc: 0.8480
+Epoch: 580, Train loss: 0.7670, Val loss: 0.8659, Test acc: 0.8450
+Epoch: 600, Train loss: 0.7482, Val loss: 0.8536, Test acc: 0.8520
+Epoch: 620, Train loss: 0.8102, Val loss: 0.8629, Test acc: 0.8430
+train_loss: 0.8137, val_acc: 0.8260, test_acc:0.8510
+mean and std of test acc: 0.8510±0.0000
+final mean and std of test acc with <1> runs: 0.8510±0.0000
+
