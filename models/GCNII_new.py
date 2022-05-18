@@ -4,7 +4,9 @@ import pickle
 import torch
 import torch.nn.functional as F
 from torch import nn
+from torch_sparse import SparseTensor
 
+from estimation.sparse_to_dense import scipy_to_dense
 from models.GCNII_DenseLayer import GCNIIConv_arxiv
 from models.GCNII_layer import GCNIIdenseConv
 
@@ -42,8 +44,13 @@ class GCNII_new(nn.Module):
 
         if self.virtual_graph is None:
             self.virtual_graph = initial_graph(edge_index, self.dataset)
-            self.virtual_edge_index = self.virtual_graph._indices()
-            self.virtual_edge_weight = self.virtual_graph._values()
+
+        if isinstance(self.virtual_graph, torch.Tensor):
+            edge_index, edge_weight = scipy_to_dense(self.virtual_graph)
+
+        elif isinstance(edge_index, SparseTensor):
+            edge_index = self.virtual_graph._indices()
+            edge_weight = self.virtual_graph._values()
 
         _hidden = []
         x = F.dropout(x, self.dropout, training=self.training)
@@ -57,8 +64,8 @@ class GCNII_new(nn.Module):
                 beta = math.log(self.lamda / (i + 1) + 1)
 
                 x = F.dropout(x, self.dropout, training=self.training)
-                x = F.relu(con(x, self.virtual_edge_index, self.alpha, x_init, beta=beta,
-                               edge_weight=self.virtual_edge_weight, ))
+                x = F.relu(con(x, edge_index, self.alpha, x_init, beta=beta,
+                               edge_weight=edge_weight, ))
 
 
             else:

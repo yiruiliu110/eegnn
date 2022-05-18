@@ -2,6 +2,9 @@ import torch
 from torch import nn
 
 # from torch_geometric.nn import SGConv
+from torch_sparse import SparseTensor
+
+from estimation.sparse_to_dense import scipy_to_dense
 from models.SGC_layer import SGConv
 from models.initial_graph import initial_graph
 
@@ -27,14 +30,16 @@ class SGC_new(nn.Module):
 
     def forward(self, x, edge_index):
 
+
+
         if self.virtual_graph is None:
             self.virtual_graph = initial_graph(edge_index, self.dataset)
-            self.virtual_edge_index = self.virtual_graph._indices()
-            self.virtual_edge_weight = self.virtual_graph._values()
+
+        edge_index, edge_weight = self.virtual_graph.gnn_sample()
 
 
         # implemented based on https://github.com/Tiiiger/SGC/blob/master/citation.py
-        x = self.SGC(x, edge_index=self.virtual_edge_index, edge_weight=self.virtual_edge_weight)
+        x = self.SGC(x, edge_index=edge_index, edge_weight=edge_weight)
         return x
 
 

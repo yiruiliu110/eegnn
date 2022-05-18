@@ -17,6 +17,7 @@ from estimation.sample_c import compute_c
 from estimation.sample_pi import sample_pi
 from estimation.sample_w_proportion import sample_w_proportion
 from estimation.sample_z import compute_z
+from estimation.sparse_to_dense import scipy_to_dense
 
 
 class BNPGraphModel(object):
@@ -242,12 +243,24 @@ class BNPGraphModel(object):
         return mean_pi, mean_log_w
 
     def compute_mean_z(self, number_of_samples: int = 1000, print_likelihood=False):
-        results_z = self.state['z']
+        results_z = self.state['z'] * 0
         for i in range(number_of_samples):
             self.one_step(update_number_cluster=False, print_likelihood=print_likelihood)
             results_z += self.state['z']
-
         return results_z/number_of_samples
+
+    def gnn_sample(self, number=1):
+        with torch.no_grad():
+            z = self.compute_mean_z(number)
+
+            z = z.to_dense()
+            z = (z + torch.transpose(z, 0, 1))  / 2
+
+            virtual_graph = z.to_sparse()
+
+            edge_index, edge_weight = scipy_to_dense(virtual_graph)
+
+            return edge_index, edge_weight
 
 
 

@@ -5,9 +5,11 @@ import numpy as np
 import torch
 import yaml
 from matplotlib import pyplot as plt
+from torch_geometric.utils import to_dense_adj
 
 from estimation.generate_edge_index_and_weight import compute_dege_index_and_weight
 from estimation.graph_model import BNPGraphModel
+from estimation.sparse_to_dense import scipy_to_dense
 from models.plot_hist import plot_hist
 
 
@@ -62,10 +64,4 @@ def initial_graph(edge_index, data_name: str = 'TEXAS', print_hist=False):
     if print_hist:
         plot_hist(estimated_graph, data_name)
 
-    virtual_graph = estimated_graph.compute_mean_z(100)
-
-    virtual_graph = virtual_graph.to_dense()
-    virtual_graph = (virtual_graph + torch.transpose(virtual_graph, 0, 1)) / 2
-    virtual_graph = virtual_graph.to_sparse()
-
-    return virtual_graph
+    return estimated_graph

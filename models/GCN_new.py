@@ -2,7 +2,9 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 from torch_geometric.nn import GCNConv
+from torch_sparse import SparseTensor
 
+from estimation.sparse_to_dense import scipy_to_dense
 from models.initial_graph import initial_graph
 
 
@@ -56,15 +58,19 @@ class GCN_new(nn.Module):
     def forward(self, x, edge_index):
 
         # implemented based on DeepGCN: https://github.com/LingxiaoShawn/PairNorm/blob/master/models.py
-
         if self.virtual_graph is None:
             self.virtual_graph = initial_graph(edge_index, self.dataset)
-            self.virtual_edge_index = self.virtual_graph._indices()
-            self.virtual_edge_weight = self.virtual_graph._values()
+
+        if isinstance(self.virtual_graph, torch.Tensor):
+            edge_index, edge_weight = scipy_to_dense(self.virtual_graph)
+
+        elif isinstance(edge_index, SparseTensor):
+            edge_index = self.virtual_graph._indices()
+            edge_weight = self.virtual_graph._values()
 
         for i in range(self.num_layers - 1):
             x = F.dropout(x, p=self.dropout, training=self.training)
-            x = self.layers_GCN[i](x, edge_index=self.virtual_edge_index, edge_weight=self.virtual_edge_weight)
+            x = self.layers_GCN[i](x, edge_index=edge_index, edge_weight=edge_weight)
             if self.type_norm in ['batch', 'pair']:
                 x = self.layers_bn[i](x)
             x = F.relu(x)
