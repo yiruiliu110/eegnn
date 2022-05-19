@@ -62,11 +62,8 @@ class APPNP_new(MessagePassing):
         """"""
         if self.virtual_graph is None:
             self.virtual_graph = initial_graph(edge_index, self.dataset)
-            self.virtual_edge_index = self.virtual_graph._indices()
-            self.virtual_edge_weight = self.virtual_graph._values()
 
-        edge_index = self.virtual_edge_index
-        edge_weight = self.virtual_edge_weight
+        edge_index, edge_weight = self.virtual_graph.gnn_sample()
 
         # implemented based on: https://github.com/klicperajo/ppnp/blob/master/ppnp/pytorch/ppnp.py
         if self.normalize:

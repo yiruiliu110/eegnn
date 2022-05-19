@@ -45,12 +45,7 @@ class GCNII_new(nn.Module):
         if self.virtual_graph is None:
             self.virtual_graph = initial_graph(edge_index, self.dataset)
 
-        if isinstance(self.virtual_graph, torch.Tensor):
-            edge_index, edge_weight = scipy_to_dense(self.virtual_graph)
-
-        elif isinstance(edge_index, SparseTensor):
-            edge_index = self.virtual_graph._indices()
-            edge_weight = self.virtual_graph._values()
+        edge_index, edge_weight = self.virtual_graph.gnn_sample()
 
         _hidden = []
         x = F.dropout(x, self.dropout, training=self.training)
