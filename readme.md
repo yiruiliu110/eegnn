@@ -23,14 +23,16 @@ To train a deep SGC model `<model>` on dataset `<dataset>` as your baseline, run
 python main.py --compare_model=1 --cuda_num=0 --SGC --dataset=TEXAS --num_layers=64
 # <model>   in  [APPNP,  GCNII,  SGC]
 # <dataset> in  [Cora, Citeseer, Pubmed, TEXAS, WISCONSIN, CORNELL]
+# <num_layers> in  [2, 16, 32, 64]
 ```
 
-#### Train Edge Enhanced Deep GNN models
+## Train Edge Enhanced Deep GNN models
 
-To train a deep SGC model `<model>` on dataset `<dataset>` as your baseline, run:
+To train a deep EE-SGC model `<model>` on dataset `<dataset>` as your baseline, run:
 
 ```bash
 python main.py --compare_model=1 --cuda_num=0 --SGC_new --dataset=TEXAS --num_layers=64
 # <model>   in  [APPNP_new,  GCNII_new,  SGC_new]
-# <dataset> in  [Cora, Citeseer, Pubmed, TEXAS, WISCONSIN, CORNELL]
+# <dataset> in  [Cora, Citeseer, Pubmed, TEXAS, WISCONSIN, CORNELL]\
+# <num_layers> in  [2, 16, 32, 64]
 ```
